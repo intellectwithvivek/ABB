@@ -1,6 +1,41 @@
+# Sample requests for every endpoint. Open in Visual Studio 2022 (17.12+) or VS Code with the REST Client
+# extension, start the API (dotnet run), then send "createGame" first: the requests below reuse its gameId.
+
 @baseUrl = http://localhost:5000
 
-GET {{baseUrl}}/swagger/v1/swagger.json
-Accept: application/json
+### Health check (used by hosting platforms; answers "Healthy")
+GET {{baseUrl}}/health
 
-###
+### Create a game ("TwoPlayer" or "VsComputer")
+# @name createGame
+POST {{baseUrl}}/api/games
+Content-Type: application/json
+
+{
+  "mode": "TwoPlayer"
+}
+
+### Get the current state of the game
+GET {{baseUrl}}/api/games/{{createGame.response.body.$.gameId}}
+
+### Submit a move (row and col are 0-based)
+POST {{baseUrl}}/api/games/{{createGame.response.body.$.gameId}}/moves
+Content-Type: application/json
+
+{
+  "player": "X",
+  "row": 0,
+  "col": 0
+}
+
+### Undo the last move (in VsComputer mode the computer's reply is undone too)
+POST {{baseUrl}}/api/games/{{createGame.response.body.$.gameId}}/undo
+
+### Reset the game (same id and mode, scoreboard unchanged)
+POST {{baseUrl}}/api/games/{{createGame.response.body.$.gameId}}/reset
+
+### Get the scoreboard
+GET {{baseUrl}}/api/scoreboard
+
+### Reset the scoreboard
+POST {{baseUrl}}/api/scoreboard/reset
