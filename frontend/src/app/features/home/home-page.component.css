@@ -159,7 +159,7 @@
   margin-top: 1rem;
 }
 
-/* min(…, 100%) lets a track shrink below its usual minimum on very narrow screens (no sideways scroll). */
+/* min(…, 100%) lets a track shrink below its minimum on narrow screens (no sideways scroll). */
 .features {
   grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
 }

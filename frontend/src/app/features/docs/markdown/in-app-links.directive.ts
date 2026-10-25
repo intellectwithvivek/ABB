@@ -20,7 +20,7 @@ export class InAppLinksDirective {
     if (!link || !isPlainClick(event) || link.target || link.hasAttribute('download')) {
       return;
     }
-    // In-app links are relative to <base href> (e.g. https://host/ABB/); others are other sites.
+    // In-app links start with the app's base URL (<base href>); any other URL is another site.
     const appRootUrl = this.document.baseURI;
     if (!link.href.startsWith(appRootUrl)) {
       return;

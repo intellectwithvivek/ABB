@@ -2,7 +2,7 @@ import { InjectionToken } from '@angular/core';
 
 /** Settings that differ per deployment; each file in src/environments provides one. */
 export interface AppConfig {
-  /** REST API root, e.g. 'http://localhost:5000/api', or '/api' when a proxy serves it same-origin. */
+  /** REST API root: 'http://localhost:5000/api' locally, '/api' behind a same-origin proxy. */
   apiBaseUrl: string;
   swaggerUrl: string;
   repositoryUrl: string;

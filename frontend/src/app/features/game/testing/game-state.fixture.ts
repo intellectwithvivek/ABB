@@ -1,6 +1,6 @@
 import { GameState } from '../models/game.models';
 
-/** A fresh Two Player game as the backend returns it; tests override only the fields they care about. */
+/** A fresh Two Player game as the backend returns it; tests override only the fields they need. */
 export function createGameState(overrides: Partial<GameState> = {}): GameState {
   return {
     gameId: '8a6e0804-2bd0-4672-b79d-d97027f9071a',

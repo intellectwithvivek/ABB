@@ -12,7 +12,7 @@ public sealed class InMemoryGameRepository : IGameRepository
 {
     // One instance (a DI singleton) serves all requests, which run in parallel on different threads.
     // ConcurrentDictionary makes Add and Find thread-safe without a global lock; changes to a single
-    // game are serialised separately by GameService locking that game's SyncRoot.
+    // game are serialized separately by GameService locking that game's SyncRoot.
     private readonly ConcurrentDictionary<Guid, SessionEntry> _sessions = new();
     private readonly TimeProvider _timeProvider;
 

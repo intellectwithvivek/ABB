@@ -167,10 +167,11 @@ public sealed class GameServiceTests
     [Fact]
     public async Task Undo_ParallelRequests_RemoveEachPairExactlyOnce()
     {
+        const int parallelRequests = 32;
         var gameId = _service.CreateGame(GameMode.VsComputer).GameId;
         Play(gameId, new Position(0, 0), new Position(2, 2), new Position(2, 0)); // 3 pairs: X and the computer's reply
 
-        var accepted = await Task.WhenAll(Enumerable.Range(0, 32)
+        var accepted = await Task.WhenAll(Enumerable.Range(0, parallelRequests)
             .Select(_ => Task.Run(() => TryUndo(gameId))));
 
         // Three undos remove the three pairs; every other request finds nothing left to undo.

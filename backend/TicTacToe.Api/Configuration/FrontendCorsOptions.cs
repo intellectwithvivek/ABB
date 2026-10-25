@@ -3,27 +3,24 @@ using System.ComponentModel.DataAnnotations;
 namespace TicTacToe.Api.Configuration;
 
 /// <summary>
-/// The browser origins allowed to call the API (section "Cors" of appsettings.json). The frontend runs on a different
-/// origin (the Angular dev server on http://localhost:4200, a static host when deployed), so the browser only lets it
-/// call the API when the API allows that origin.
+/// The browser origins allowed to call the API cross-origin (section "Cors" of appsettings.json), e.g. the Angular
+/// dev server on http://localhost:4200. A site that proxies /api to the API is same-origin and needs no entry.
 /// </summary>
 /// <remarks>
-/// A deployment sets its own origin with an environment variable, e.g.
-/// <c>Cors__AllowedOrigins__0=https://example.github.io</c>: "__" stands for ":" in environment variable names,
+/// A deployment can set an origin with an environment variable, e.g.
+/// <c>Cors__AllowedOrigins__0=https://app.example.com</c>: "__" stands for ":" in environment variable names,
 /// and the index replaces that item of the list in appsettings.json.
 /// </remarks>
 public sealed class FrontendCorsOptions : IValidatableObject
 {
     public const string SectionName = "Cors";
 
-    // An empty list would make the browser block every call from the frontend; failing at startup is easier
-    // to diagnose.
+    // An empty list would make the browser block every cross-origin call; failing at startup is easier to diagnose.
     [MinLength(1)]
     public string[] AllowedOrigins { get; set; } = [];
 
-    // Called by ValidateDataAnnotations at startup, after the attribute checks. A browser sends its origin as
-    // scheme + host (+ port) only, so an entry with a path or a trailing slash (e.g. https://example.github.io/ABB)
-    // would never match and would silently block every call from that site.
+    // Called by ValidateDataAnnotations at startup. A browser sends its origin as scheme + host (+ port) only, so an
+    // entry with a path or a trailing slash (e.g. https://app.example.com/play) would never match.
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) =>
         AllowedOrigins
             .Where(origin => !IsOrigin(origin))

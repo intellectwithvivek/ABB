@@ -11,7 +11,7 @@
           <p class="state-loading" role="status">Loading document…</p>
         }
         @case ('ready') {
-          <!-- [innerHTML] is sanitized by Angular; the directives restore heading anchors and route in-app links. -->
+          <!-- Sanitized by Angular; the directives add heading anchors and route in-app links. -->
           <article
             class="prose"
             [innerHTML]="state.rendered.html"

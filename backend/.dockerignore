@@ -1,4 +1,4 @@
-# Keep the Docker build context small and free of local build output; the image restores and builds from source.
+# Keep the build context small: the image restores and builds from source and does not include the tests.
 **/bin
 **/obj
 **/TestResults

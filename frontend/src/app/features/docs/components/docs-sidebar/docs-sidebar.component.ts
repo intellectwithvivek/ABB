@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { DOC_SECTIONS } from '../../docs.catalog';
 
-/** Every document grouped by category, with the open one highlighted. Collapsible on small screens. */
+/** Every document by category, with the open one highlighted; collapsible on small screens. */
 @Component({
   selector: 'app-docs-sidebar',
   imports: [RouterLink, RouterLinkActive],

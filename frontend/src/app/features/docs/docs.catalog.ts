@@ -4,7 +4,6 @@ export const DOC_CATEGORIES = [
   'Engineering',
   'Delivery',
   'AI-assisted development',
-  'Panel preparation',
 ] as const;
 
 export type DocCategory = (typeof DOC_CATEGORIES)[number];
@@ -27,21 +26,19 @@ export interface DocSection {
   docs: readonly DocEntry[];
 }
 
-/** Every document, grouped by category in DOC_CATEGORIES order (previous/next follow this order). */
+/** Every document, grouped in DOC_CATEGORIES order; previous/next links follow this order. */
 export const DOCS_CATALOG: readonly DocEntry[] = [
   {
     slug: 'readme',
     title: 'README',
-    description:
-      'Project overview, how to run the API and the UI locally, tests and known limitations.',
+    description: 'Project overview, how to run and test it locally, and known limitations.',
     category: 'Start here',
     sourcePath: 'README.md',
   },
   {
     slug: 'problem-statement',
     title: 'Problem statement',
-    description:
-      'The official Round 2 brief, transcribed to Markdown, with the original Word file.',
+    description: 'The official Round 2 brief in Markdown, with the original Word file.',
     category: 'Start here',
     sourcePath: 'docs/PROBLEM_STATEMENT.md',
     originalPath: 'docs/assets/Round-2-Problem-Statement.docx',
@@ -49,29 +46,28 @@ export const DOCS_CATALOG: readonly DocEntry[] = [
   {
     slug: 'traceability',
     title: 'Requirements traceability',
-    description: 'Every requirement of the brief mapped to the code and the tests that cover it.',
+    description: 'Each requirement of the brief mapped to the code and tests that meet it.',
     category: 'Start here',
     sourcePath: 'docs/TRACEABILITY.md',
   },
   {
     slug: 'architecture',
     title: 'Architecture',
-    description:
-      'How the Angular SPA, the ASP.NET Core API and the TicTacToe.Core rules fit together.',
+    description: 'How the Angular app, the ASP.NET Core API and the game rules fit together.',
     category: 'Engineering',
     sourcePath: 'docs/ARCHITECTURE.md',
   },
   {
     slug: 'api',
     title: 'API reference',
-    description: 'REST endpoints, the JSON contract, status codes and error responses.',
+    description: 'REST endpoints, the JSON contract, status codes and errors.',
     category: 'Engineering',
     sourcePath: 'docs/API.md',
   },
   {
     slug: 'decisions',
     title: 'Design decisions',
-    description: 'What was decided, why, and which alternatives were considered.',
+    description: 'Key decisions, their rationale and the alternatives considered.',
     category: 'Engineering',
     sourcePath: 'docs/DECISIONS.md',
   },
@@ -83,16 +79,23 @@ export const DOCS_CATALOG: readonly DocEntry[] = [
     sourcePath: 'docs/TESTING.md',
   },
   {
+    slug: 'panel-qa',
+    title: 'Design Q&A',
+    description: 'Common reviewer questions answered with references to the code.',
+    category: 'Engineering',
+    sourcePath: 'docs/PANEL_QA.md',
+  },
+  {
     slug: 'deployment',
     title: 'Deployment',
-    description: 'Docker, GitHub Pages, Render, Vercel and DigitalOcean: build, configure, ship.',
+    description: 'The live setup on Vercel and Render, and how to configure and release it.',
     category: 'Delivery',
     sourcePath: 'docs/DEPLOYMENT.md',
   },
   {
     slug: 'contributing',
     title: 'Contributing',
-    description: 'Project structure, coding conventions and the checks every change must pass.',
+    description: 'Branches, commits, coding conventions and the checks every change must pass.',
     category: 'Delivery',
     sourcePath: 'docs/CONTRIBUTING.md',
   },
@@ -109,13 +112,6 @@ export const DOCS_CATALOG: readonly DocEntry[] = [
     description: 'The specification written for the AI assistant, recorded verbatim.',
     category: 'AI-assisted development',
     sourcePath: 'docs/SPEC_PROMPT.md',
-  },
-  {
-    slug: 'panel-qa',
-    title: 'Panel Q&A',
-    description: 'Questions the panel is likely to ask, with short prepared answers.',
-    category: 'Panel preparation',
-    sourcePath: 'docs/PANEL_QA.md',
   },
 ];
 

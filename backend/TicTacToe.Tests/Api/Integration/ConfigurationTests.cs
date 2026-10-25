@@ -59,9 +59,9 @@ public sealed class ConfigurationTests : IDisposable
     }
 
     [Theory]
-    [InlineData("https://intellectwithvivek.github.io/ABB")]
-    [InlineData("https://example.vercel.app/")]
-    [InlineData("example.com")]
+    [InlineData("https://app.example.com/play")]
+    [InlineData("https://app.example.com/")]
+    [InlineData("app.example.com")]
     public void Startup_CorsOriginNotSchemeAndHost_FailsWithValidationError(string origin)
     {
         // A browser sends its origin without a path or trailing slash, so such an entry would never match.

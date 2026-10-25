@@ -29,11 +29,10 @@ public static class ServiceCollectionExtensions
         AddGameServices(services);
         AddRateLimiting(services);
 
-        // Kestrel accepts 30 MB bodies by default, which a public client could send only to make the server read
-        // and parse them. A larger body is rejected with 413 (mapped by GameExceptionHandler).
+        // Kestrel's default is 30 MB; a body over MaxRequestBodyBytes is rejected with 413 (GameExceptionHandler).
         services.Configure<KestrelServerOptions>(kestrel => kestrel.Limits.MaxRequestBodySize = MaxRequestBodyBytes);
 
-        // The CORS policy itself is applied in UseTicTacToeApi, from FrontendCorsOptions.
+        // The CORS policy is applied in UseTicTacToeApi, from FrontendCorsOptions.
         services.AddCors();
         services.AddSwaggerGen();
         services.AddHealthChecks();
@@ -60,51 +59,47 @@ public static class ServiceCollectionExtensions
 
     private static void AddControllersWithJsonConventions(IServiceCollection services)
     {
-        // JSON properties are camelCase by default; enums are sent and read as their names ("X", "VsComputer"),
-        // and allowIntegerValues: false rejects numbers such as "player": 1 instead of mapping them to a value.
-        // SuppressImplicitRequired...: when a body cannot be read, the JSON error already says why. Without it,
-        // MVC adds a second, vaguer "The request field is required." error (nullable reference types make every
-        // non-nullable parameter implicitly [Required]), and that one can come first in the "errors" list the
-        // client shows.
-        // The text/plain formatter is removed because no action returns a string: Swagger would otherwise list
-        // text/plain as the first (default) media type of every JSON response.
         services
             .AddControllers(options =>
             {
+                // When a body cannot be read, the JSON error already says why. Without this, nullable reference
+                // types make MVC add a second, vaguer "The request field is required." error that can come first.
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+
+                // No action returns a string; without this, Swagger lists text/plain first for every JSON response.
                 options.OutputFormatters.RemoveType<StringOutputFormatter>();
             })
             .AddJsonOptions(options =>
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false)));
+            {
+                // Enums travel as their names ("X", "VsComputer"); numbers such as "player": 1 are rejected.
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(allowIntegerValues: false));
+            });
     }
 
     private static void AddErrorHandling(IServiceCollection services)
     {
-        // Errors are written as RFC 7807 problem+json: AddProblemDetails covers the framework's own (e.g. the
-        // default 500), and GameExceptionHandler maps the game's exceptions to 400 and 404 in the same format.
+        // Every error is RFC 7807 problem+json: AddProblemDetails covers the framework's own (e.g. the default 500),
+        // and GameExceptionHandler maps the game's exceptions to 400 and 404.
         services.AddProblemDetails();
         services.AddExceptionHandler<GameExceptionHandler>();
 
-        // In .NET 8 the exception middleware logs every exception as "unhandled" (with a stack trace) before
-        // GameExceptionHandler turns it into a normal 400/404. That log is switched off here; GameExceptionHandler
-        // logs the exceptions it does not expect, so real server errors are still recorded.
+        // In .NET 8 the exception middleware logs every exception as unhandled, even an expected 400/404.
+        // GameExceptionHandler logs the unexpected ones itself, so real server errors are still recorded.
         services.AddLogging(logging =>
             logging.AddFilter("Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware", LogLevel.None));
     }
 
     private static void AddGameServices(IServiceCollection services)
     {
-        // Singletons: these hold the server's in-memory state, so every request must share the same instance.
+        // Singletons: they hold the server's in-memory state, which every request must share.
         services.AddSingleton<IGameRepository, InMemoryGameRepository>();
         services.AddSingleton<IScoreboardService, Scoreboard>();
 
-        // Scoped (one per request): GameService keeps no state of its own; it works on the singletons above.
+        // Scoped: GameService keeps no state of its own; it works on the singletons above.
         services.AddScoped<GameService>();
 
-        // The real clock, injected (instead of read from DateTimeOffset.UtcNow) so tests can use a fake one.
+        // The clock is injected (not read from DateTimeOffset.UtcNow) so tests can use a fake one.
         services.AddSingleton(TimeProvider.System);
-
-        // A hosted service: started and stopped together with the app.
         services.AddHostedService<ExpiredSessionCleanupService>();
     }
 
@@ -115,20 +110,18 @@ public static class ServiceCollectionExtensions
             limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             limiter.OnRejected = RateLimitRejectionHandler.WriteProblemAsync;
 
-            // One fixed window per client IP address, so a client flooding the public demo is slowed down without
-            // affecting anyone else. It applies to every request.
+            // One fixed window per client IP address for every request, so a client flooding the public demo is
+            // slowed down without affecting anyone else.
             limiter.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 PerClientWindow(httpContext, settings => settings.PermitLimit));
 
-            // A second, lower limit, which only the actions marked [EnableRateLimiting(CreateGamePolicy)]
-            // also have to pass.
+            // A lower, additional limit for the actions marked [EnableRateLimiting(CreateGamePolicy)].
             limiter.AddPolicy(RateLimitingOptions.CreateGamePolicy, httpContext =>
                 PerClientWindow(httpContext, settings => settings.CreateGamePermitLimit));
         });
     }
 
-    // Runs for every request. The validated settings are read from the request's services; IOptions<T> is a
-    // singleton that caches its value, so the lookup is cheap.
+    // Runs for every request; IOptions<T> is a singleton that caches its value, so the lookup is cheap.
     private static RateLimitPartition<string> PerClientWindow(
         HttpContext httpContext, Func<RateLimitingOptions, int> permitLimit)
     {

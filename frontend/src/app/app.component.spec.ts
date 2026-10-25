@@ -8,7 +8,7 @@ import { TEST_APP_CONFIG } from './testing/app-config.fixture';
 @Component({ template: '<h1>Routed page</h1>' })
 class RoutedPageStubComponent {}
 
-/** Shell test: the layout around every page. Which page each URL shows is covered by app.routes.spec.ts. */
+/** The layout around every page; which page each URL shows is covered by app.routes.spec.ts. */
 describe('AppComponent', () => {
   let fixture: ComponentFixture<AppComponent>;
   let page: HTMLElement;

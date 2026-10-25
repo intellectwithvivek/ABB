@@ -2,9 +2,8 @@
 const REPOSITORY_BRANCH = 'main';
 
 /**
- * URL of a repository file published with the site (scripts/copy-docs.mjs copies README.md and docs/
- * to content/). Relative on purpose: it resolves against <base href>, so it also works when the app
- * is served from a sub-path such as /ABB/ on GitHub Pages.
+ * URL of a repository file published with the site (scripts/copy-docs.mjs copies README.md and
+ * docs/ to content/). Relative, so it resolves against <base href> rather than the site root.
  */
 export function contentUrl(repositoryPath: string): string {
   return `content/${repositoryPath}`;

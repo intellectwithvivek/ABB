@@ -9,11 +9,11 @@
   --color-surface-muted: #eef1f6;
   --color-border: #dce1ea;
   --color-border-strong: #c3cad8;
-  /* Outline of a control that has no other visible edge, e.g. an empty board cell (3:1 contrast). */
+  /* Outline of a control with no other visible edge, e.g. an empty board cell (3:1 contrast). */
   --color-border-control: #7c8599;
   --color-text: #1b2233;
   --color-text-muted: #5d667a;
-  /* Text on a strong colour such as the accent or danger colour. */
+  /* Text on a strong color such as the accent or danger color. */
   --color-text-inverse: #ffffff;
   --color-accent: #4f46e5;
   --color-accent-hover: #4338ca;
@@ -105,7 +105,7 @@ p {
     color 0.15s;
 }
 
-.button:hover:not(:disabled) {
+.button:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--color-surface-muted);
   border-color: var(--color-text-muted);
 }
@@ -115,7 +115,9 @@ p {
   outline-offset: 2px;
 }
 
-.button:disabled {
+/* aria-disabled looks the same as disabled but keeps keyboard focus (used by Undo Last Move). */
+.button:disabled,
+.button[aria-disabled='true'] {
   cursor: not-allowed;
   opacity: 0.45;
 }
@@ -126,7 +128,7 @@ p {
   color: var(--color-text-inverse);
 }
 
-.button--primary:hover:not(:disabled) {
+.button--primary:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--color-accent-hover);
   border-color: var(--color-accent-hover);
 }
@@ -302,8 +304,10 @@ p {
   font-size: inherit;
 }
 
-/* Wide tables scroll sideways inside the article instead of stretching the page. */
+/* Wide tables scroll sideways inside the article instead of stretching the page. position: relative
+   makes the table clip the absolutely positioned .visually-hidden link notes as well. */
 .prose table {
+  position: relative;
   display: block;
   width: max-content;
   max-width: 100%;

@@ -17,9 +17,9 @@ public static class WebApplicationExtensions
         // or an id that is not a GUID, and 405 for a wrong HTTP method, so the frontend always has a message to show.
         app.UseStatusCodePages();
 
-        // The frontend is a different origin from the API, so the browser only lets it call the API when the API
-        // allows that origin (FrontendCorsOptions). CORS comes before the rate limiter, so a 429 still carries the
-        // CORS header the browser needs to show it to the frontend, and preflight requests never use up the limit.
+        // CORS matters only when the frontend runs on another origin, e.g. the Angular dev server; the deployed site
+        // proxies /api and is same-origin. It comes before the rate limiter, so a 429 still carries the CORS header
+        // the browser needs to show it, and preflight requests never use up the limit.
         var cors = app.Services.GetRequiredService<IOptions<FrontendCorsOptions>>().Value;
         app.UseCors(policy => policy.WithOrigins(cors.AllowedOrigins).AllowAnyHeader().AllowAnyMethod());
 

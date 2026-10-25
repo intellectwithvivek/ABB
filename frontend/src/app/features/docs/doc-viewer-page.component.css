@@ -16,7 +16,7 @@
   align-self: stretch;
 }
 
-/* min-width: 0 keeps long words and URLs from widening the column; tables and code scroll instead. */
+/* min-width: 0 stops long words and URLs widening the column; tables and code scroll instead. */
 .content {
   min-width: 0;
   padding: 2.25rem 2.5rem 2.5rem;

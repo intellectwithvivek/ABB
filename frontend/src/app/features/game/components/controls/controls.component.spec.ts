@@ -63,8 +63,16 @@ describe('ControlsComponent', () => {
 
   it('disables Undo Last Move when there is nothing to undo', async () => {
     const element = await renderControls({ canUndo: false });
+    const undoSpy = vi.fn();
+    fixture.componentInstance.undo.subscribe(undoSpy);
+    const undoButton = button(element, 'Undo Last Move');
 
-    expect(button(element, 'Undo Last Move').disabled).toBe(true);
+    undoButton.click();
+
+    expect(undoButton.getAttribute('aria-disabled')).toBe('true');
+    // Not natively disabled, so the button keeps keyboard focus after the last undo.
+    expect(undoButton.disabled).toBe(false);
+    expect(undoSpy).not.toHaveBeenCalled();
     expect(button(element, 'Reset Game').disabled).toBe(false);
   });
 

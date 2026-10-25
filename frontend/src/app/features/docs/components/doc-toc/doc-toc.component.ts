@@ -18,8 +18,8 @@ export class DocTocComponent {
   readonly entries = input.required<readonly TocEntry[]>();
 
   /**
-   * Long documents (e.g. Design decisions has ~70 headings) would turn the list into a second scrolling page,
-   * so they list only their sections. A document without any h2 keeps its full list.
+   * A long document lists only its h2 sections, so the list does not become a second scrolling
+   * page. A document without any h2 keeps its full list.
    */
   protected readonly visibleEntries = computed(() => {
     const entries = this.entries();

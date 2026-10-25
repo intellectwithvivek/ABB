@@ -39,7 +39,7 @@ export const FEATURE_HIGHLIGHTS: readonly FeatureHighlight[] = [
   {
     title: 'Rule-based computer opponent',
     description:
-      'Win if possible, otherwise block, then take the centre, a corner, any free cell. Deterministic, so every move is explainable and tested.',
+      'Win if possible, otherwise block, then take the center, a corner, any free cell. Deterministic, so every move is explainable and tested.',
     briefReference: 'Must-have 4',
   },
   {
@@ -61,7 +61,7 @@ export const TECH_STACK: readonly TechStackGroup[] = [
   },
   {
     area: 'Delivery',
-    items: ['GitHub Actions CI', 'Docker', 'GitHub Pages', 'Render'],
+    items: ['GitHub Actions CI', 'Docker', 'Vercel', 'Render'],
   },
 ];
 

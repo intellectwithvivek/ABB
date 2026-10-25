@@ -23,7 +23,7 @@ const ANY_SCHEME = /^[a-z][a-z\d+.-]*:/i;
  */
 export function resolveDocLink(href: string, doc: DocEntry, repositoryUrl: string): ResolvedLink {
   if (href.startsWith('#')) {
-    // A bare "#x" would resolve against <base href> and leave the page, so name the page explicitly.
+    // A bare "#x" would resolve against <base href> and leave the page, so name the page.
     return { kind: 'in-app', href: `docs/${doc.slug}${href}` };
   }
   if (WEB_URL.test(href)) {
@@ -58,7 +58,8 @@ export function resolveImageSource(src: string, doc: DocEntry, repositoryUrl: st
 /**
  * Resolves a relative link found in `fromFile` to a path from the repository root:
  * ('docs/AI_WORKFLOW.md', 'SPEC_PROMPT.md') → 'docs/SPEC_PROMPT.md',
- * ('docs/API.md', '../README.md') → 'README.md'. A leading '/' means the repository root, as on GitHub.
+ * ('docs/API.md', '../README.md') → 'README.md'.
+ * A leading '/' means the repository root, as on GitHub.
  */
 export function resolveRepositoryPath(fromFile: string, relativePath: string): string {
   const segments = relativePath.startsWith('/') ? [] : fromFile.split('/').slice(0, -1);

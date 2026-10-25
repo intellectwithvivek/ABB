@@ -34,7 +34,7 @@
   list-style: none;
 }
 
-/* overflow-wrap: anywhere lets identifiers such as SuppressImplicitRequired… wrap instead of overflowing. */
+/* overflow-wrap: anywhere lets long identifiers wrap instead of overflowing. */
 .entry {
   display: block;
   overflow-wrap: anywhere;

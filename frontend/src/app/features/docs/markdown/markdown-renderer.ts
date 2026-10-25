@@ -26,8 +26,7 @@ export interface RenderedMarkdown {
 
 /**
  * Converts one project document from Markdown to HTML with `marked`, collecting heading anchors and
- * rewriting links so they work inside the portal (see resolveDocLink). A pure function: the same
- * input always gives the same output, which keeps it easy to unit test.
+ * rewriting links so they work inside the portal (see resolveDocLink). Pure, so it is easy to test.
  */
 export function renderMarkdown(
   markdown: string,

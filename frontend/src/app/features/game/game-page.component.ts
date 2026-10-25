@@ -7,7 +7,7 @@ import { ScoreboardComponent } from './components/scoreboard/scoreboard.componen
 import { StatusBarComponent } from './components/status-bar/status-bar.component';
 import { GameStore } from './state/game.store';
 
-/** The /play page: wires the store's signals into the components and their events back to the store. */
+/** The /play page: binds the store's signals to the components and their events to the store. */
 @Component({
   selector: 'app-game-page',
   imports: [

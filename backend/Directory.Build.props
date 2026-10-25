@@ -5,8 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- Keeps the build at zero warnings: any new warning fails the build instead of piling up. -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- Except NuGet's vulnerability audit (NU1901-NU1904): a newly published advisory for a package stays a visible
-         warning, and Dependabot opens the update, but it cannot fail CI or a deployment of an unrelated change. -->
+    <!-- Except NuGet's vulnerability audit (NU1901-NU1904): a newly published advisory stays a visible warning for
+         Dependabot to fix, instead of failing CI or the deployment of an unrelated change. -->
     <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
   </PropertyGroup>
 </Project>

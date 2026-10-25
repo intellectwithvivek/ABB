@@ -5,8 +5,8 @@ namespace TicTacToe.Api.Configuration;
 /// (section "Swagger" of appsettings.json).
 /// </summary>
 /// <remarks>
-/// On in every environment by default, so the deployed API documents itself for reviewers;
-/// <c>Swagger__Enabled=false</c> turns it off. Not named SwaggerOptions, which Swashbuckle already uses.
+/// On in every environment by default, so the deployed API documents itself; <c>Swagger__Enabled=false</c> turns it
+/// off. Not named SwaggerOptions, which Swashbuckle already uses.
 /// </remarks>
 public sealed class ApiDocumentationOptions
 {

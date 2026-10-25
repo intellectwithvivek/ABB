@@ -1,5 +1,5 @@
 /*
- * Bottom centre on phones. On wider screens it sits top right, below the site header, where it
+ * Bottom center on phones. On wider screens it sits top right, below the site header, where it
  * cannot cover the game controls (New Game is often the way out of the error it reports).
  */
 .toast {

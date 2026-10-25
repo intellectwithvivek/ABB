@@ -53,17 +53,17 @@ public sealed class ScoreboardTests
     [Fact]
     public void RecordResults_CalledInParallel_CountsEveryCall()
     {
-        const int GamesPerResult = 10_000;
+        const int gamesPerResult = 10_000;
 
         // One scoreboard is shared by every game on the server. Without its lock, parallel ++ operations
         // overwrite each other and the totals come out short (likely, though not certain, on any single run).
-        Parallel.For(0, GamesPerResult, _ =>
+        Parallel.For(0, gamesPerResult, _ =>
         {
             _scoreboard.RecordWin(Player.X);
             _scoreboard.RecordWin(Player.O);
             _scoreboard.RecordDraw();
         });
 
-        Assert.Equal(new ScoreSnapshot(GamesPerResult, GamesPerResult, GamesPerResult), _scoreboard.GetScores());
+        Assert.Equal(new ScoreSnapshot(gamesPerResult, gamesPerResult, gamesPerResult), _scoreboard.GetScores());
     }
 }

@@ -33,4 +33,12 @@ export class ControlsComponent {
   protected readonly modeChangePending = computed(
     () => this.activeMode() !== null && this.selectedMode() !== this.activeMode(),
   );
+
+  // Undo is locked with aria-disabled, like the board cells: the last undo makes it unavailable,
+  // and a natively disabled button would drop the keyboard focus that just pressed it.
+  protected requestUndo(): void {
+    if (this.canUndo()) {
+      this.undo.emit();
+    }
+  }
 }

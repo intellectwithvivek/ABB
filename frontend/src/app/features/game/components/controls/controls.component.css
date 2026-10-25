@@ -45,7 +45,7 @@
     color 0.15s;
 }
 
-/* The native radio stays in the page (keyboard and screen reader support); only its look is hidden. */
+/* The native radio stays for keyboard and screen reader support; only its look is hidden. */
 .mode-option input {
   position: absolute;
   inset: 0;

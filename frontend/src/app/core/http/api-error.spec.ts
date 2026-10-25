@@ -15,11 +15,20 @@ describe('toErrorMessage', () => {
     );
   });
 
-  it('names a same-origin API by its path, since it has no origin of its own', () => {
+  it('does not name a same-origin API, whose relative path means nothing to a player', () => {
     expect(toErrorMessage(httpError(0, null), '/api')).toBe(
-      'Cannot reach the game server at /api. Is the backend running?',
+      'Cannot reach the game server. Check your connection and try again.',
     );
   });
+
+  it.each([502, 503, 504])(
+    'explains a %i gateway error as a server that is starting up or unavailable',
+    (status) => {
+      expect(toErrorMessage(httpError(status, { title: 'Bad Gateway' }), '/api')).toBe(
+        'The game server is starting up or temporarily unavailable. Please try again in a moment.',
+      );
+    },
+  );
 
   it('shows the ProblemDetails detail, which carries the game rule that was broken', () => {
     const problem = {

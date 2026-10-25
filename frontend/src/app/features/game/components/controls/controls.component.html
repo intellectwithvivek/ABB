@@ -1,6 +1,6 @@
 <div class="controls">
   <div class="button-row">
-    <button type="button" class="button" [disabled]="!canUndo()" (click)="undo.emit()">
+    <button type="button" class="button" [attr.aria-disabled]="!canUndo()" (click)="requestUndo()">
       Undo Last Move
     </button>
     <button type="button" class="button" [disabled]="!canReset()" (click)="resetGame.emit()">

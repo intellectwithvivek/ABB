@@ -50,7 +50,7 @@
   color: var(--color-o);
 }
 
-/* The thicker border marks the winning line without relying on colour alone. */
+/* The thicker border marks the winning line without relying on color alone. */
 .cell--winning {
   background: var(--color-success-soft);
   border-width: 4px;

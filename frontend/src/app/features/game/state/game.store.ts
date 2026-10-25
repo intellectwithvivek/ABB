@@ -18,9 +18,9 @@ const EMPTY_BOARD: CellValue[][] = [
 ];
 
 /**
- * Single place the UI reads state from and sends actions to.
- * The game itself is server state: `game` only ever holds the latest snapshot returned by the backend.
- * The store adds UI state only (selected mode, loading flag, error message).
+ * Single place the UI reads state from and sends actions to. The game itself is server state:
+ * `game` only ever holds the latest snapshot returned by the backend. The store adds UI state only
+ * (selected mode, loading flag, error message).
  */
 @Injectable({ providedIn: 'root' })
 export class GameStore {

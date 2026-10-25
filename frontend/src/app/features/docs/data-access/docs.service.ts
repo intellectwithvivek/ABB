@@ -12,8 +12,8 @@ export class DocsService {
     const url = contentUrl(sourcePath);
     return this.http.get(url, { observe: 'response', responseType: 'text' }).pipe(
       map((response) => {
-        // Hosts with a single-page-app fallback (Vercel, DigitalOcean) answer a missing file with
-        // index.html and status 200; report it as the 404 it really is.
+        // A host with a single-page-app fallback answers a missing file with index.html and
+        // status 200; report it as the 404 it really is.
         if (response.headers.get('Content-Type')?.includes('text/html')) {
           throw new HttpErrorResponse({ status: 404, statusText: 'Not Found', url });
         }

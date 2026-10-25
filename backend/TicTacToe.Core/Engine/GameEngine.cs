@@ -51,7 +51,7 @@ public sealed class GameEngine
         if (!Board.IsOnBoard(position))
         {
             throw new GameRuleException(
-                $"Row and column must be between 0 and 2 (got row {position.Row}, col {position.Col}).");
+                $"Row and column must be between 0 and {Board.Size - 1} (got row {position.Row}, col {position.Col}).");
         }
 
         if (player != CurrentPlayer)

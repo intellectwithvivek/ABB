@@ -22,7 +22,6 @@ describe('DocsService', () => {
 
     service.getMarkdown('docs/API.md').subscribe((text) => (markdown = text));
 
-    // No leading slash: under <base href="/ABB/"> this becomes /ABB/content/docs/API.md.
     const request = httpTesting.expectOne('content/docs/API.md');
     expect(request.request.responseType).toBe('text');
     request.flush('# API contract', { headers: { 'Content-Type': 'text/markdown' } });

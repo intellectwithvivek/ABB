@@ -61,7 +61,6 @@ public sealed class GameService
 
     // GameSession is not thread-safe, and two requests for the same game can arrive at once (e.g. a double click).
     // Locking the game's own SyncRoot runs them one at a time while requests for other games still run in parallel.
-    // Mapping inside the lock makes the response a consistent snapshot of the state this action produced.
     private GameStateResponse RunLocked(Guid id, Action<GameSession> action)
     {
         var session = _games.Find(id) ?? throw new GameNotFoundException(id);
