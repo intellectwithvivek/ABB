@@ -4,4 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Lets the tests call internal members such as Board.Place to set up any board position directly. -->
+    <InternalsVisibleTo Include="TicTacToe.Tests" />
+  </ItemGroup>
+
 </Project>
