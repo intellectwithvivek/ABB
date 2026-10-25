@@ -134,7 +134,7 @@ How the work was checked:
 - **My manual acceptance test:** I played the app myself on the isolated snapshot (prompt 10). On a long document the "On this page" list overflowed sideways because of one very long identifier, and listed about 70 headings as a second scrolling page. The fix wraps long words, shows only the h2 sections when a document has more than 24 headings (`MAX_TOC_ENTRIES_WITH_SUBSECTIONS` in [`doc-toc.component.ts`](../frontend/src/app/features/docs/components/doc-toc/doc-toc.component.ts)) and uses a thin scrollbar, with tests in `doc-toc.component.spec.ts`.
 - **Live checks** after deployment: deep links, the published docs, and a game created through the Vercel proxy.
 - **CI** builds and tests both projects and builds the API's Docker image on every push and pull request, and Render deploys only after CI passes.
-- **Clean-clone check:** the repository is cloned into an empty folder and built and tested using only the README commands.
+- **Clean-clone check:** the repository was cloned into an empty folder and built, tested and run using only the README commands: 130/130 backend and 170/170 frontend tests, a warning-free build and 24/24 browser scenarios ([details](TESTING.md#quality-checks)).
 
 ## Assumptions
 
