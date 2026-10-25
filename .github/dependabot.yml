@@ -1,4 +1,6 @@
 # Weekly pull requests that keep dependencies current; CI (ci.yml) tests each one before it can be merged.
+# Major versions are ignored: the project is pinned to .NET 8 (LTS) and Angular 21, and a major upgrade
+# (framework, TypeScript, test runner) is a deliberate change made together with its migrations.
 version: 2
 updates:
   - package-ecosystem: nuget
@@ -6,9 +8,7 @@ updates:
     schedule:
       interval: weekly
     ignore:
-      # The API targets .NET 8 (LTS). ASP.NET Core packages share the framework's major version, so moving
-      # to a new major is a deliberate framework upgrade, not a routine bump.
-      - dependency-name: Microsoft.AspNetCore.*
+      - dependency-name: "*"
         update-types: [version-update:semver-major]
 
   - package-ecosystem: npm
@@ -20,8 +20,7 @@ updates:
       angular:
         patterns: ["@angular/*"]
     ignore:
-      # A new Angular major ships code migrations, so it is upgraded deliberately with `ng update`.
-      - dependency-name: "@angular/*"
+      - dependency-name: "*"
         update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions

@@ -186,7 +186,7 @@ The decisions that shaped this project. Each entry gives the context, the choice
 
 ### D29. CI checks every change, and Dependabot keeps dependencies current
 - **Context:** Every change should be verified the same way on a clean machine.
-- **Decision:** [`ci.yml`](../.github/workflows/ci.yml) runs on every push and pull request to `main`: the backend is restored, built and tested in Release with the SDK from `global.json`; the frontend runs `npm ci`, the build, `npm run test:ci` and `npm run format:check` on Node 22; once the backend passes, the API's Docker image is built. [`dependabot.yml`](../.github/dependabot.yml) opens weekly updates for NuGet, npm and GitHub Actions, grouping Angular packages and leaving Angular and ASP.NET Core major versions to deliberate upgrades. One root [`.editorconfig`](../.editorconfig) defines formatting.
+- **Decision:** [`ci.yml`](../.github/workflows/ci.yml) runs on every push and pull request to `main`: the backend is restored, built and tested in Release with the SDK from `global.json`; the frontend runs `npm ci`, the build, `npm run test:ci` and `npm run format:check` on Node 22; once the backend passes, the API's Docker image is built. [`dependabot.yml`](../.github/dependabot.yml) opens weekly updates for NuGet, npm and GitHub Actions, grouping Angular packages and skipping every major version: a major upgrade (framework, TypeScript, test runner) is made deliberately, together with its migrations. One root [`.editorconfig`](../.editorconfig) defines formatting.
 - **Why:** A reproducible check replaces "works on my machine", and Render deploys only commits that passed it (D28).
 - **Alternative:** Local checks only, which depend on one machine and on discipline.
 
