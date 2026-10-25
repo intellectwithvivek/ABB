@@ -1,0 +1,35 @@
+# ---------- .NET ----------
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esults/
+*.user
+*.suo
+*.rsuser
+.vs/
+*.binlog
+
+# ---------- Node / Angular ----------
+node_modules/
+dist/
+out-tsc/
+tmp/
+.angular/
+coverage/
+npm-debug.log*
+yarn-error.log
+.sass-cache/
+__screenshots__/
+
+# ---------- Editors ----------
+.idea/
+**/.vscode/*
+!**/.vscode/settings.json
+!**/.vscode/tasks.json
+!**/.vscode/launch.json
+!**/.vscode/extensions.json
+.history/
+*.swp
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db

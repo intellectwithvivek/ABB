@@ -1,0 +1,9 @@
+<!-- Shared MSBuild settings applied to every project under backend/. -->
+<Project>
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Keeps the build at zero warnings: any new warning fails the build instead of piling up. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+</Project>

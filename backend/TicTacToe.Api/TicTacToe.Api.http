@@ -1,0 +1,6 @@
+@baseUrl = http://localhost:5000
+
+GET {{baseUrl}}/swagger/v1/swagger.json
+Accept: application/json
+
+###
