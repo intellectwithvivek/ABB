@@ -19,9 +19,6 @@ max_line_length = off
 # Two trailing spaces are a line break in Markdown.
 trim_trailing_whitespace = false
 
-[*.conf]
-indent_size = 4
-
 # Visual Studio writes solution files with tabs and a byte order mark.
 [*.sln]
 charset = utf-8-bom

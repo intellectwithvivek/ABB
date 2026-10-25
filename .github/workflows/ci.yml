@@ -1,5 +1,5 @@
-# Builds and tests both halves of the app on every push and pull request to main, then checks that
-# both Docker images still build. Render deploys the API only after these checks pass (render.yaml).
+# Builds and tests the backend and the frontend on every push and pull request to main, and checks that the API's
+# Docker image still builds once the backend passes. Render deploys the API only after all checks pass (render.yaml).
 name: CI
 
 on:
@@ -8,7 +8,6 @@ on:
   pull_request:
     branches: [main]
 
-# The jobs only read the repository.
 permissions:
   contents: read
 
@@ -22,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Installs the .NET 8 SDK that backend/global.json selects, so CI and local builds use the same SDK line.
+      # The SDK that backend/global.json selects, so CI and local builds use the same SDK line.
       - uses: actions/setup-dotnet@v6
         with:
           global-json-file: backend/global.json
@@ -52,19 +51,12 @@ jobs:
       - run: npm run format:check
 
   docker:
-    name: Docker images
-    needs: [backend, frontend]
+    name: Docker image (API)
+    needs: backend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      # Build only (nothing is pushed): proves the Dockerfiles and docker-compose.yml still work.
-      - name: Validate docker-compose.yml
-        run: docker compose config --quiet
-
+      # Build only, nothing is pushed: proves backend/Dockerfile still produces the image Render deploys.
       - name: Build the API image
-        run: docker build --tag tictactoe-api backend
-
-      # The web image's build context is the repository root, so the docs portal can include docs/ and README.md.
-      - name: Build the web image
-        run: docker build --file frontend/Dockerfile --tag tictactoe-web .
+        run: docker build --file backend/Dockerfile --tag tictactoe-api backend

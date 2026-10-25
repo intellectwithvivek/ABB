@@ -1,6 +1,7 @@
 # Render Blueprint for the API (https://render.com/docs/blueprint-spec).
 # Render dashboard > New > Blueprint > this repository. Render builds backend/Dockerfile and serves the API at
 # https://tictactoe-abb-api.onrender.com (the service name becomes the subdomain).
+# No CORS settings: the Vercel site proxies /api to this service, so the browser stays on the site's own origin.
 services:
   - type: web
     name: tictactoe-abb-api
@@ -16,11 +17,3 @@ services:
     buildFilter:
       paths:
         - backend/**
-    envVars:
-      # Browser origins allowed to call the API cross-origin: scheme + host only, no /ABB path.
-      - key: Cors__AllowedOrigins__0
-        value: https://intellectwithvivek.github.io
-      # Optional second origin (e.g. https://<project>.vercel.app); Render asks for it when the Blueprint is created.
-      # The Vercel deployment does not need it: its /api rewrite keeps the browser on the page's own origin.
-      - key: Cors__AllowedOrigins__1
-        sync: false

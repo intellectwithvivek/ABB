@@ -1,6 +1,6 @@
 ## What and why
 
-<!-- What does this change do, and which requirement, issue or review comment does it address? -->
+<!-- What does this change do, and which requirement or issue does it address? -->
 
 ## How it was tested
 
