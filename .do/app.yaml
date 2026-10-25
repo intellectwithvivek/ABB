@@ -1,0 +1,55 @@
+# DigitalOcean App Platform spec (https://docs.digitalocean.com/products/app-platform/reference/app-spec/).
+# Create with: doctl apps create --spec .do/app.yaml   (or Apps > Create App > import this spec in the control panel)
+# The API and the site share one domain: /api and /swagger go to the API, everything else to the static site,
+# so the browser needs no CORS.
+name: tictactoe-abb
+
+services:
+  - name: api
+    github:
+      repo: intellectwithvivek/ABB
+      branch: main
+      deploy_on_push: true
+    # Docker build context = backend/, as for `docker build backend`.
+    source_dir: backend
+    dockerfile_path: backend/Dockerfile
+    http_port: 8080
+    # Games live in the API process's memory, so a second instance would not know another's games.
+    instance_count: 1
+    health_check:
+      http_path: /health
+
+static_sites:
+  - name: web
+    github:
+      repo: intellectwithvivek/ABB
+      branch: main
+      deploy_on_push: true
+    # App Platform detects Node.js from frontend/package.json and runs `npm ci` itself. The whole repository is
+    # cloned for the build, so the prebuild step can still copy ../README.md and ../docs into the site.
+    source_dir: frontend
+    build_command: npm run build
+    output_dir: dist/tictactoe-web/browser
+    # Unknown paths (/play, /docs/api) get index.html, so the Angular router can open deep links.
+    catchall_document: index.html
+
+ingress:
+  rules:
+    # preserve_path_prefix: the API's routes start with /api and /swagger, so the prefix must not be stripped.
+    - match:
+        path:
+          prefix: /api
+      component:
+        name: api
+        preserve_path_prefix: true
+    - match:
+        path:
+          prefix: /swagger
+      component:
+        name: api
+        preserve_path_prefix: true
+    - match:
+        path:
+          prefix: /
+      component:
+        name: web

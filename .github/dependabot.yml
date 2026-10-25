@@ -1,0 +1,30 @@
+# Weekly pull requests that keep dependencies current; CI (ci.yml) tests each one before it can be merged.
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /backend
+    schedule:
+      interval: weekly
+    ignore:
+      # The API targets .NET 8 (LTS). ASP.NET Core packages share the framework's major version, so moving
+      # to a new major is a deliberate framework upgrade, not a routine bump.
+      - dependency-name: Microsoft.AspNetCore.*
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      # Angular packages are released together and must stay on the same version.
+      angular:
+        patterns: ["@angular/*"]
+    ignore:
+      # A new Angular major ships code migrations, so it is upgraded deliberately with `ng update`.
+      - dependency-name: "@angular/*"
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

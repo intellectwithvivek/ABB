@@ -1,0 +1,70 @@
+# Builds and tests both halves of the app on every push and pull request to main, then checks that
+# both Docker images still build. Render deploys the API only after these checks pass (render.yaml).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# The jobs only read the repository.
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (.NET 8)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs the .NET 8 SDK that backend/global.json selects, so CI and local builds use the same SDK line.
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: backend/global.json
+
+      - run: dotnet restore
+      - run: dotnet build --configuration Release --no-restore
+      - run: dotnet test --configuration Release --no-build
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:ci
+      - run: npm run format:check
+
+  docker:
+    name: Docker images
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Build only (nothing is pushed): proves the Dockerfiles and docker-compose.yml still work.
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
+
+      - name: Build the API image
+        run: docker build --tag tictactoe-api backend
+
+      # The web image's build context is the repository root, so the docs portal can include docs/ and README.md.
+      - name: Build the web image
+        run: docker build --file frontend/Dockerfile --tag tictactoe-web .

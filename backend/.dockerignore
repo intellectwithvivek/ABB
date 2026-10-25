@@ -1,0 +1,7 @@
+# Keep the Docker build context small and free of local build output; the image restores and builds from source.
+**/bin
+**/obj
+**/TestResults
+**/*.user
+**/.vs
+TicTacToe.Tests

@@ -1,0 +1,22 @@
+# The whole app in containers, no .NET or Node.js needed on the machine:
+#   docker compose up --build      then open http://localhost:8080
+# nginx in the web container serves the Angular app and the docs, and forwards /api and /swagger to the api
+# container, so the browser talks to a single origin.
+services:
+  api:
+    build: ./backend
+    environment:
+      # frontend/nginx.conf forwards to http://api:8080.
+      PORT: "8080"
+      # The origin the browser loads the app from.
+      Cors__AllowedOrigins__0: http://localhost:8080
+
+  web:
+    build:
+      # The repository root, so the build can include README.md and docs/ in the docs portal.
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
