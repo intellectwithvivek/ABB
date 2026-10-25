@@ -1,299 +1,197 @@
 # How I used AI on this assessment
 
-I built this project with an AI coding assistant, Claude Code. This page records how I used it: the tool and how its work was organised, how I turned the brief into a specification, every prompt in order, what the AI produced, what I directed, what a human still has to review, the assumptions and trade-offs, and the problems the AI ran into on my machine.
+I built this project with Claude Code. This page records the tools I used, how I turned the brief into a specification, the prompts in order, what the AI generated, what I directed and reviewed, and the assumptions, trade-offs and environment issues along the way.
 
 The official brief is [PROBLEM_STATEMENT.md](PROBLEM_STATEMENT.md). The specification I wrote from it is recorded verbatim in [SPEC_PROMPT.md](SPEC_PROMPT.md).
 
-**In short:** I wrote the specification and made the product decisions. Claude Code wrote the code, tests, configuration and documentation through focused sub-agents, and checked the result with builds, tests, smoke tests, browser runs and independent reviewer agents. I did not edit the generated code by hand. I steered it through the specification and follow-up prompts. The places that most need a human eye are listed under [What a human must still review](#what-a-human-must-still-review).
+**In short:** I wrote the specification and made every product, hosting and scope decision. Claude Code generated the code, tests, configuration and documentation through focused sub-agents, and verified the result with builds, tests, a `curl` smoke test, browser runs and independent reviewer agents. I did not edit generated files by hand. I directed every change through prompts, tested the app myself, and I am accountable for every line.
 
-## Tools used
+## Tools
 
 | | |
 |---|---|
-| AI assistant | Claude Code (Anthropic), running in VS Code on Windows 11 |
+| Assistant | Claude Code (Anthropic), in VS Code on Windows 11 |
 | Model | Claude Opus 5.5 |
-| What the AI ran on my machine | .NET 8 SDK (`dotnet build`, `dotnet test`, `dotnet run`), Angular CLI and Vitest, `curl`, headless Chrome (screenshots and scripted checks), small Node scripts, `git` |
+| Way of working | One orchestrating session that delegated focused tasks to sub-agents |
+| Commands the AI ran | .NET 8 SDK (`dotnet build`, `test`, `run`), Angular CLI and Vitest, `curl.exe`, headless Chrome through the DevTools Protocol, small Node scripts, `git` |
 
 ### How the sub-agents were orchestrated
 
-Claude Code worked as an orchestrator. It did not write most of the code in its main session. It wrote a plan and handed out focused tasks.
-
-1. **Design contract first.** After reading my specification, the main session wrote an internal design contract. It fixed the Core types and method names, the order in which a move is validated, the exact error messages, the API layout, a frozen JSON contract, the test plan, and the Angular structure and visual design. The contract is a working file and is not in the repository. The decisions that matter are in [DECISIONS.md](DECISIONS.md).
-2. **One sub-agent per task.** Each task went to a separate sub-agent with its own prompt and its own list of files. Every sub-agent worked under the same rules:
-   - never run a git command that changes the repository (only the orchestrator commits);
-   - never change the JSON contract;
-   - report every deviation from the contract, with the reason;
-   - stop any server it started.
+1. **Design contract first.** Before any code, the main session wrote a design contract: Core types and method names, the order in which a move is validated, exact error messages, the API layout, a frozen JSON contract, the test plan and the Angular structure. The contract was a working file outside the repository; the decisions that matter are in [DECISIONS.md](DECISIONS.md).
+2. **One sub-agent per task.** Each task had its own prompt and its own list of files. Every sub-agent had to keep the JSON contract unchanged, report each deviation with its reason, stop any server it started, and never run a git command that changes the repository.
 3. **Parallel only when safe.** Sub-agents ran at the same time only when they touched different files.
-4. **Reports, then integration.** Each sub-agent returned a structured report: files created, deviations, the commands it ran with their output, and notes for the next agent. The orchestrator reviewed the report, integrated the work and made the commit.
-5. **A second contract for the extended scope.** When I asked for an enterprise structure, a review portal and free hosting (my prompt 4 below), the orchestrator wrote a second design contract and ran a second round of sub-agents.
-6. **Independent review, then fixes.** Reviewer sub-agents that had not written the code checked it. Fix sub-agents then applied the findings that were confirmed.
-7. **Documentation last.** Documentation sub-agents wrote the docs from the code and the build reports, and a fact-check pass compared them with the code. This page was drafted that way, from the real prompt log, the build reports and the code.
-
-### What I did and what the AI did
-
-| Area | Me | Claude Code |
-|---|---|---|
-| Requirements | Read the brief; wrote the specification; decided every open question (Option A undo, where the computer moves, what Reset keeps) | Copied my specification into `docs/SPEC_PROMPT.md`; transcribed the Word brief into `docs/PROBLEM_STATEMENT.md` |
-| Design | Chose the stack, the API, the game-state shape and the quality bar; asked for the enterprise structure, the review portal and the hosting targets | Wrote the two design contracts (types, messages, contract, test plan, folder layering) |
-| Code and tests | Defined the required test list; set the rule that every line must be explainable to a React/TypeScript/Java developer | Wrote all code, tests, configuration and Dockerfiles through sub-agents |
-| Verification | Set the quality bar; I am responsible for the final review and for defending the code in the panel | Built, tested, smoke-tested, took screenshots, ran scripted browser checks and reviewer agents |
-| Git and GitHub | Chose the repository, the commit identity and the attribution policy | Ran the git commands and pushed |
-| Hosting | Chose free hosting and asked for a GitHub-based deployment | Wrote the deployment files; the one-time account steps (creating the Render service, enabling GitHub Pages) are mine to do |
+4. **Reports, then integration.** Each sub-agent returned the files it changed, its deviations and the commands it ran with their output. The orchestrator reviewed the report, integrated the work and committed it.
+5. **Independent review.** Reviewer sub-agents that had not written the code checked it, and fix sub-agents applied only the confirmed findings. Documentation was fact-checked against the code the same way.
 
 ## How I converted the requirement into a specification
 
-The brief ([PROBLEM_STATEMENT.md](PROBLEM_STATEMENT.md)) describes what the app must do, but leaves several choices open. An AI agent fills open choices on its own, and not always the same way twice. So before any code existed I rewrote the brief as an executable specification, [SPEC_PROMPT.md](SPEC_PROMPT.md). Every requirement in it can be checked, and every choice the brief leaves open is already decided.
+The brief leaves several choices open, and an AI agent fills open choices on its own, not always the same way twice. Before any code existed, I rewrote the brief as an executable specification in which every requirement can be checked and every open question is already decided.
 
-| The brief says | My specification pins it down |
+| The brief says | My specification decides |
 |---|---|
-| Angular + .NET Web API, in-memory or SQLite | **Fixed stack, no substitutions:** latest stable Angular with standalone components, .NET 8 Web API, in-memory storage in a thread-safe singleton, no database |
-| "Suggested API scope"; "the exact endpoint names can vary" | **The seven endpoints, used exactly as listed,** with exact request bodies (`{ "mode": … }`, `{ "player", "row", "col" }`) and 400 with a clear message body for every rejected move |
-| The game state "should include" a list of fields | **A frozen state contract:** the field list, the status values, and the rule that every endpoint that changes state returns the full updated state, so the frontend never computes a rule itself |
-| Option A or Option B for undo after completion | **Option A**, stated in the README |
-| The computer "should make a move automatically" | **The computer moves inside the same `POST /moves` request**, server-side, and never after the human's move has ended the game |
-| Undo removes "the latest move or move pair based on the selected game mode" | **The edge case is decided:** history X then O, Undo removes both; Undo is disabled when the history is empty |
-| "Start a fresh game session"; "session-level scoreboard" | **One session = one game id. Reset keeps the id and the mode. The scoreboard is global for the server process.** |
-| A list of things the tests should cover | **A named test list:** one clearly named test per case, including one test per computer priority rule and "the computer does not move after the game is over" |
-| — | **Eight build phases**, each ending in a commit, with a final clean-clone verification that uses only the README |
-| README contents; AI workflow notes | **Required docs:** README sections in a fixed order, Windows PowerShell commands, `API.md` with real `curl` output, `DECISIONS.md`, this file, and `PANEL_QA.md` with 25–35 questions |
-| A "clean and usable interface" | **A quality bar:** no build warnings, nullable C# and strict TypeScript, small single-purpose files, no dead or commented-out code, comments only where they explain why, and a UI that looks intentional |
+| Angular + .NET Web API; in-memory storage or SQLite | Latest stable Angular with standalone components, .NET 8 Web API, in-memory storage in a thread-safe singleton |
+| "Suggested API scope"; endpoint names can vary | The seven endpoints exactly, with request bodies, and a 400 with a clear message for every rejected move |
+| The game state "should include" a list of fields | A frozen state shape; every endpoint that changes state returns the full state, so the frontend never computes a rule |
+| Option A or Option B for undo after completion | Option A, stated in the README |
+| The computer "should make a move automatically" | The computer moves inside the same `POST /moves` request, and never after the human's move has ended the game |
+| Undo removes "the latest move or move pair" | History X then O and Undo removes both; Undo is disabled when the history is empty |
+| "Start a fresh game session"; "session-level scoreboard" | One session is one game id; Reset keeps the id and mode; one scoreboard for the server process |
+| Things the tests should cover | One clearly named test per case, including one per computer priority rule |
+| A "clean and usable interface" | A quality bar: no build warnings, nullable C#, strict TypeScript, small files, no dead code, comments only to explain why |
 
-I added two instructions about how to work:
-
-- **Do not stop to ask.** Make a sensible decision, record it in `DECISIONS.md`, and keep going.
-- **Write for me.** I am a React/TypeScript/Java developer and less experienced with Angular and .NET, so the code should be idiomatic and easy to read, and non-obvious Angular or .NET choices should be explained in short comments and in the docs.
+I added two working instructions: make a sensible decision and record it instead of stopping to ask, and write idiomatic, readable code with short comments on non-obvious Angular and .NET choices, because my background is React, TypeScript and Java. The specification also fixed eight build phases, each ending in a commit, and the documents to write.
 
 ## The prompts used
 
 ### My prompts, in order
 
-1. **The specification prompt.** Recorded verbatim in [SPEC_PROMPT.md](SPEC_PROMPT.md). Purpose: turn the problem statement into unambiguous, testable instructions.
-2. "push code here https://github.com/intellectwithvivek/ABB.git … push all commits by name, don't use my office email account, complete all end to end task." (The message also named my personal email address, which is left out here.) Purpose: publish to my personal GitHub under my own name, not my work identity.
-3. An answer to a question from the tool. GitHub refused the push because my email address is private (error GH007), so I chose my GitHub no-reply address. Purpose: keep my email private and still attribute every commit to my account.
-4. "start all phases, complete it fast; use enterprise-level codebase management and folder structure in backend and frontend; all docs must be readable from the frontend by the interviewers; I plan to deploy on free hosting like Vercel / DigitalOcean; the complete brief is the file 'Round 2 - Problem Statement.docx'; make it very professional — they can go everywhere from the frontend." Purpose: an enterprise structure, a review portal, readiness for deployment, and the official brief as the reference.
-5. "why is claude showing in the commit history — all commits should go by my name." Purpose: commits carry only my identity, with no AI co-author trailer. AI usage is disclosed on this page instead.
-6. "can we deploy backend and frontend on GitHub?" Purpose: GitHub Pages for the frontend, plus Render for the API, because GitHub cannot run a .NET API.
+1. **The specification prompt**, recorded in [SPEC_PROMPT.md](SPEC_PROMPT.md). Purpose: turn the brief into unambiguous, testable instructions.
+2. "push code here https://github.com/intellectwithvivek/ABB.git … push all commits by name, don't use my office email account, complete all end to end task" (the message also gave my personal email address, omitted here). Purpose: publish to my personal GitHub under my own identity.
+3. My answer to a question from the tool: GitHub refused the push because my email address is private (GH007), so commits use my GitHub no-reply address. Purpose: keep my email private and still attribute every commit to my account.
+4. "start all phases, complete it fast; use enterprise-level codebase management and folder structure in backend and frontend; all docs must be readable from the frontend by the interviewers; I plan to deploy on free hosting like Vercel / DigitalOcean; the complete brief is the file 'Round 2 - Problem Statement.docx'; make it very professional". Purpose: a layered structure, a review portal for the panel, deployment readiness, and the official brief as the reference.
+5. "why is claude showing in the commit history — all commits should go by my name". Purpose: commits carry only my identity; AI use is disclosed on this page instead.
+6. "can we deploy backend and frontend on GitHub?" Purpose: explore GitHub-based hosting. GitHub cannot run a .NET API, so the API went to Render. The GitHub Pages target was later removed (prompt 14).
 7. "complete all tasks, complete the project end to end" (sent twice). Purpose: finish every remaining phase without stopping.
+8. "fix all this thing", after reading the reviewers' findings. Purpose: apply every confirmed finding.
+9. "I have reviewed it, it's correct — also review it from your end as an experienced developer and tester". Purpose: an independent senior review and test pass before committing.
+10. "run this project locally, I will test it manually". Purpose: my own acceptance test. The tool ran an isolated snapshot on ports 5080 and 4280 so that work in progress was not disturbed.
+11. A bug report from that test: "on the docs page a vertical scroll is coming, not looking professional", with screenshots. Purpose: fix the "On this page" list on the docs pages (see [What I reviewed most carefully](#what-i-reviewed-most-carefully-and-how)).
+12. A series of hosting questions: frontend on GitHub and backend on Railway; Vercel instead; free options after my Railway trial expired; both parts on Vercel. Purpose: choose the hosting. The research showed that a Vercel-hosted API cannot keep in-memory state reliably.
+13. "I have the Vercel $20 plan, I want to deploy this on Vercel; this is a demo for the ABB interview … tell me about the database we use as per the requirement", then "Add Redis for Vercel". Purpose: deploy the portal on Vercel. I first chose a Redis-backed store so the API could also run on Vercel; I reversed that in prompt 14.
+14. "remove unnecessary things in code and docs; everything very professional end to end". Purpose: the final cleanup. My decisions with it:
+    - Keep Vercel (portal) + Render (API) with in-memory storage. I considered Redis and declined it to keep the solution lean and within the brief, which accepts in-memory storage.
+    - Make the panel document a reviewer-facing [Design Q&A](PANEL_QA.md), and keep my personal interview preparation outside the repository.
+    - Remove the deployment targets that are not used (GitHub Pages, DigitalOcean, Docker Compose and the nginx frontend image).
 
-### Orchestration prompts Claude Code generated and acted on, in order
+### Orchestration prompts Claude Code generated, summarised
 
-1. **Design contract v1.** Exact Core types and methods, validation order, error messages, API layout, frozen JSON contract, test plan, Angular structure and visual design.
-2. **Sub-agent "core-impl".** Implement `TicTacToe.Core` to the contract (phase 2).
-3. **Sub-agent "core-tests".** One named xUnit test per required case, plus extra cases (phase 3).
-4. **Sub-agent "api-impl".** Controllers, DTOs, ProblemDetails errors, CORS, Swagger, service and HTTP integration tests, a `curl` smoke test, and `docs/API.md` (phase 4).
-5. **Sub-agent "ui-impl".** The Angular UI with standalone components and signals: store, components, toast, loading state, and a visual check in headless Chrome (phase 5).
-6. **Sub-agent "ui-tests".** Vitest specs for the board, `GameApiService` and the other units, with a mutation check (phase 6).
-7. **Design contract v2.** Enterprise folder layering, the review portal (overview, play, docs viewer), deployment to GitHub Pages, Vercel, Render, DigitalOcean and Docker, and CI.
-8. **Sub-agents "backend-enterprise", "frontend-restructure", "frontend-portal" and "devops".** Implement contract v2.
-9. **Review sub-agents.** Requirements traceability, adversarial probing of the game logic, a scripted browser end-to-end run, backend code quality and frontend code quality. Fix sub-agents then applied the confirmed findings.
-10. **Documentation sub-agents.** README, ARCHITECTURE, TESTING, DECISIONS, DEPLOYMENT, CONTRIBUTING, AI_WORKFLOW and PANEL_QA, followed by fact-check and final-verification sub-agents.
-
-How the two lists line up: orchestration prompts 1–6 carried out my prompt 1. Prompts 7–8 answered my prompt 4, and the GitHub Pages + Render pairing was added to contract v2 after my prompt 6. Prompts 9–10 answered my prompt 7.
+1. **Design contract v1**, then one sub-agent each for the Core logic, the Core tests, the Web API (with the `curl` smoke test and [API.md](API.md)), the Angular UI, and the frontend tests. These carried out my prompt 1 (phases 2–6).
+2. **Design contract v2**, for layered folders, the review portal, deployment configuration and CI, carried out by backend, frontend, portal and DevOps sub-agents (prompt 4).
+3. **Review round:** requirements traceability, adversarial probing of the game logic, a scripted browser run, and backend and frontend code-quality reviews, followed by fix sub-agents (prompts 7–9).
+4. **Documentation round:** a sub-agent per document, then fact-check and final-verification sub-agents (prompt 7).
+5. **Hosting research and a step-by-step deployment prompt** for configuring Render and Vercel in my own accounts, which I ran with a browser-based assistant, followed by checks of the live site (prompts 12–13).
+6. **Design contract v3:** a Redis-backed store for serverless hosting. It was not adopted (prompt 14), and the repository contains no Redis code.
+7. **Final cleanup:** code polish, removal of the unused deployment targets, a rewrite of the docs, a fact-check and a full re-verification (prompt 14).
 
 ## What the AI generated
 
-Everything below was generated by Claude Code's sub-agents to my specification and the two design contracts.
+All of the following was generated by Claude Code's sub-agents, to my specification and the design contracts. The only file I wrote myself is [SPEC_PROMPT.md](SPEC_PROMPT.md).
 
-**Core game logic** ([`backend/TicTacToe.Core`](../backend/TicTacToe.Core/))
-- `Domain/`: `Board`, `Position`, `Move`, `Player`, `GameMode`, `GameStatus`.
-- `Engine/GameEngine.cs`: the rules of Tic Tac Toe. It validates and applies moves, detects wins and draws, and undoes moves. The current player and the outcome are derived from the board and history, never stored.
-- `Opponents/ComputerPlayer.cs`: the rule-based opponent.
-- `Sessions/GameSession.cs`: the product rules. It handles modes, the computer's reply, the Option A undo policy and pair undo, and records each finished game exactly once.
-- `Scoring/`: a thread-safe `Scoreboard` behind `IScoreboardService`.
+- **Core logic** ([`backend/TicTacToe.Core`](../backend/TicTacToe.Core/)): the domain types (`Board`, `Position`, `Move`, `Player`, `GameMode`, `GameStatus`); `GameEngine` (validation, win and draw detection, undo, with the turn and outcome derived from the board and history); the rule-based `ComputerPlayer`; `GameSession` (modes, the computer's reply, Option A, pair undo, recording each result once); and the thread-safe `Scoreboard` behind `IScoreboardService`.
+- **API** ([`backend/TicTacToe.Api`](../backend/TicTacToe.Api/)): two controllers for the seven endpoints, request and response DTOs, `ResponseMapper`, `GameService` (each action under the game's lock), `InMemoryGameRepository` behind `IGameRepository`, `GameExceptionHandler` (RFC 7807 problem+json), validated settings classes, a per-client rate limiter, `/health`, idle-game cleanup and Swagger.
+- **Tests** ([`backend/TicTacToe.Tests`](../backend/TicTacToe.Tests/) and the `*.spec.ts` files in [`frontend/src`](../frontend/src/)): xUnit tests for the Core, the application layer and the HTTP pipeline, including concurrency tests and an exhaustive test of every game against the computer; Vitest specs for the game components, the store, `GameApiService`, error mapping, routing and the docs portal. See [TESTING.md](TESTING.md).
+- **UI** ([`frontend/src/app/features/game`](../frontend/src/app/features/game/)): standalone, zoneless Angular 21 components (board, cell, status bar, controls, move history, scoreboard), the signal-based `GameStore`, `GameApiService`, the error toast and plain CSS with no UI library.
+- **Review portal** ([`frontend/src/app`](../frontend/src/app/)): the site shell, an overview page for reviewers, and a docs viewer that renders this repository's own Markdown, published with every build by [`copy-docs.mjs`](../frontend/scripts/copy-docs.mjs).
+- **Deployment and CI:** [`backend/Dockerfile`](../backend/Dockerfile), [`render.yaml`](../render.yaml), [`vercel.json`](../vercel.json), the GitHub Actions [CI workflow](../.github/workflows/ci.yml), Dependabot, a pull-request template and `.editorconfig`.
+- **Documentation:** the README and every file in `docs/` except SPEC_PROMPT.md, including this page and the Markdown transcription of the Word brief.
 
-**Tests** ([`backend/TicTacToe.Tests`](../backend/TicTacToe.Tests/) and the `*.spec.ts` files in [`frontend/src`](../frontend/src/))
-- xUnit tests for the Core, one named test per case required by the specification, plus extra cases. Examples: a ninth move that completes a line is a win, the computer prefers winning to blocking, and the scoreboard counts every call across 10,000 parallel rounds of updates.
-- Application and HTTP tests: `GameServiceTests`, and `WebApplicationFactory` integration tests for status codes, problem+json bodies, CORS, the health check, rate limiting and configuration validation.
-- A concurrency test: exactly one of several parallel moves to the same cell succeeds.
-- Tests for the idle-game cleanup that run on a fake clock.
-- Vitest specs for every game component, `GameApiService` (using `provideHttpClientTesting`), the store, error mapping, routing and the docs portal (catalog, Markdown rendering, link rewriting).
+## What I directed and changed
 
-See [TESTING.md](TESTING.md) for the full inventory and the current counts.
+I made my changes as directions, not as hand edits to generated files:
 
-**API** ([`backend/TicTacToe.Api`](../backend/TicTacToe.Api/))
-- Controllers for the seven endpoints. Request and response DTOs, and a `ResponseMapper`.
-- `GameService`, which runs each action under that game's lock.
-- `InMemoryGameRepository`, behind the `IGameRepository` interface.
-- `GameExceptionHandler`, which maps errors to RFC 7807 problem+json responses.
-- Validated settings classes (Options pattern) for CORS, sessions, rate limiting and Swagger.
-- A per-client-IP rate limiter, a `/health` endpoint, and `ExpiredSessionCleanupService`, which removes idle games.
-- Swagger, `TicTacToe.Api.http` sample requests, and central package management.
+- **Through the specification:** the fixed stack, the exact endpoints, the state shape, Option A, the computer moving inside the move request, pair undo, Reset keeping the id and mode, the global scoreboard, the test list, the phases and the quality bar.
+- **Through follow-up prompts:** my commit identity and the no-reply address; no AI co-author trailer; the layered structure; the review portal; the hosting choice; applying the reviewers' findings; the fix for the bug I found in my manual test; and the final cleanup with its scope decisions.
+- **Deviations I accepted.** The AI reported each one with its reason:
+  - Angular 21.2 instead of 22, because Angular 22's CLI needs a newer Node.js than my machine has.
+  - `provideHttpClientTesting()` instead of `HttpClientTestingModule`, its current, non-deprecated replacement.
+  - An extra `canUndo` field in the game state, so the Undo rule exists only on the server.
+  - The title "Invalid move" for every broken game rule, including undo errors; the `detail` always carries the specific message.
+  - Two framework adjustments in [`ServiceCollectionExtensions.cs`](../backend/TicTacToe.Api/Extensions/ServiceCollectionExtensions.cs), explained under [environment issues](#environment-issues-and-how-they-were-resolved).
+  - Layers expressed as folders and namespaces inside the three projects my specification names, rather than extra projects.
 
-**UI** ([`frontend/src/app/features/game`](../frontend/src/app/features/game/))
-- Standalone, zoneless Angular 21 components: board, cell, status bar, controls, move history and scoreboard.
-- `GameStore`, built on signals. It holds only the last snapshot from the server plus UI state.
-- `GameApiService` and the error-to-message mapping.
-- A non-blocking error toast, a loading state, and plain CSS with no UI library.
+### What a human must review
 
-**Review portal** ([`frontend/src/app/core`](../frontend/src/app/core/) and [`frontend/src/app/features`](../frontend/src/app/features/))
-- The site shell (header, footer, not-found page) and lazy-loaded routes.
-- An overview page for interviewers: how to review, features mapped to the brief, an architecture diagram and quick links.
-- A docs hub and a document viewer that renders the repository's own Markdown with `marked`. It has a sidebar, an "On this page" list and heading anchors, and it rewrites links: links to other documents open in the app, and links to source files open on GitHub.
-- [`frontend/scripts/copy-docs.mjs`](../frontend/scripts/copy-docs.mjs), which publishes `README.md` and `docs/` with every build, so the portal shows exactly the files reviewers read on GitHub.
+These are the places where a subtle mistake would break an acceptance criterion or the public deployment. Each has tests, but a test only proves what its author thought of, so I treat them as my own review responsibility.
 
-**Deployment and CI**
-- [`backend/Dockerfile`](../backend/Dockerfile): multi-stage, non-root, port taken from `PORT`, forwarded headers enabled.
-- [`frontend/Dockerfile`](../frontend/Dockerfile) and [`frontend/nginx.conf`](../frontend/nginx.conf): nginx serves the UI and proxies `/api` and `/swagger` to the API.
-- The three environment files, and the `github-pages` build configuration in `angular.json`.
-- The repository-level files from contract v2: `docker-compose.yml`, `render.yaml`, `vercel.json`, `.do/app.yaml`, the GitHub Actions workflows for CI and GitHub Pages, Dependabot, a pull-request template and `.editorconfig`.
+| Area | Where | Why it needs a human |
+|---|---|---|
+| Computer priority | [`ComputerPlayer.ChooseMove`](../backend/TicTacToe.Core/Opponents/ComputerPlayer.cs), `FindLineCompletingMove`, `FindFirstEmpty` | The order must be exactly win, block, centre, corner, any cell. A completing line needs exactly two of the player's marks and one empty cell. The helpers return `Position?` because `FirstOrDefault` on a struct returns (0,0), a real cell. |
+| Pair undo | [`GameSession.Undo`](../backend/TicTacToe.Core/Sessions/GameSession.cs) | The Option A check must come first. The second `UndoLastMove` is a single `if`, which is correct only because a Vs Computer game always has an even number of moves between requests. |
+| Scoreboard counted once | `GameSession.RecordResultIfFinished`, `_resultRecorded`, `GameSession.Reset` | Each finished game must be counted exactly once, and `Reset` must re-arm the guard or the next game would never be counted. |
+| Validation order | [`GameEngine.ApplyMove`](../backend/TicTacToe.Core/Engine/GameEngine.cs), `EvaluateOutcome` | The order (game over, off board, wrong player, occupied) decides which message a user sees, and the off-board check must run before the board is indexed. A rejected move must change nothing, and a win must be checked before a draw. |
+| Lock and mapping | [`GameService.RunLocked`](../backend/TicTacToe.Api/Application/GameService.cs), `GameService.CreateGame`, [`ResponseMapper.ToGameState`](../backend/TicTacToe.Api/Mapping/ResponseMapper.cs) | The response must be built inside `lock (session.SyncRoot)`, so a reader never sees the human's move without the computer's reply. The `board[row][col]` orientation is part of the contract. |
+| Error mapping | [`GameExceptionHandler.TryHandleAsync`](../backend/TicTacToe.Api/ErrorHandling/GameExceptionHandler.cs), `ToStatusAndTitle`, `AddErrorHandling` | Only expected exceptions may become 400, 404 or a Kestrel status; anything else must stay a 500 with no internal detail. The framework's own exception log is filtered, so the handler's `LogError` is the only record of a real server error. |
+| Proxy, CORS and client IP | [`vercel.json`](../vercel.json) rewrites, [`environment.production.ts`](../frontend/src/environments/environment.production.ts), [`UseTicTacToeApi`](../backend/TicTacToe.Api/Extensions/WebApplicationExtensions.cs), `Cors:AllowedOrigins` in [`appsettings.json`](../backend/TicTacToe.Api/appsettings.json), `ASPNETCORE_FORWARDEDHEADERS_ENABLED` in the Dockerfile | The Render URL is written into `vercel.json`. Behind the proxy the API sees Vercel's address, so visitors who reach it through the same Vercel address share one rate-limit bucket. CORS is only for local development and must run before the rate limiter, so a 429 still reaches the UI. |
+| Public-hosting limits | [`RateLimitingOptions`](../backend/TicTacToe.Api/Configuration/RateLimitingOptions.cs), [`GameSessionOptions`](../backend/TicTacToe.Api/Configuration/GameSessionOptions.cs), [`ExpiredSessionCleanupService`](../backend/TicTacToe.Api/Infrastructure/Maintenance/ExpiredSessionCleanupService.cs), `InMemoryGameRepository.Find` | 300 requests (30 new games) per minute per client and a 2-hour idle timeout are reasonable values for a demo, not load-tested ones. |
+| Client request flow | [`GameStore`](../frontend/src/app/features/game/state/game.store.ts) `play`, `run`, `resync`, `init` | `play` must send the `currentPlayer` the server reported; `run` allows one request at a time; `resync` reloads the game after a 400 and starts a new one after a 404. |
+| Error wording | [`toErrorMessage`](../frontend/src/app/core/http/api-error.ts) | A 502, 503 or 504 from the proxy means the API is waking up or unavailable, and a same-origin path such as `/api` must never appear in a message. |
+| Markdown rendering | [`renderMarkdown`](../frontend/src/app/features/docs/markdown/markdown-renderer.ts), [`resolveDocLink`](../frontend/src/app/features/docs/markdown/doc-link-resolver.ts), `[innerHTML]` in [`doc-viewer-page.component.html`](../frontend/src/app/features/docs/doc-viewer-page.component.html) | The HTML relies on Angular's built-in sanitizer and nothing calls `bypassSecurityTrust…`. That is safe only because the content is this repository's own docs. |
+| Brief transcription | [PROBLEM_STATEMENT.md](PROBLEM_STATEMENT.md) against [the original Word file](assets/Round-2-Problem-Statement.docx) | The portal presents the AI's transcription as the official brief, so it must match the original word for word. |
 
-See [DEPLOYMENT.md](DEPLOYMENT.md).
+## What I reviewed most carefully, and how
 
-**Documentation**
-- The README and every file in `docs/`, including this one, drafted by documentation sub-agents.
-- `API.md`, which contains the real output of the `curl` smoke test.
-- The Markdown transcription of the Word brief.
+1. **Pair undo and the scoreboard guard.** These are the rules the brief spells out with examples, and a mistake still produces a plausible screen. They are pinned by named tests such as `Undo_AfterHumanAndComputerMoved_RemovesBothAndRestoresXTurn` and `Reset_ThenNextGameEnds_RecordsNextResultToo`, and by a test that plays all 489 possible games against the computer and checks the scoreboard after every move.
+2. **Computer move selection.** There is one test per priority rule plus `ChooseMove_CanWinAndMustBlock_PrefersWinning`, because preferring a block over a win is the classic mistake.
+3. **Concurrency.** The repository is shared by every request, so a double click or two tabs could race. `SubmitMove_ParallelMovesToSameCell_ExactlyOneSucceeds` sends 50 parallel moves to one cell and expects exactly one to succeed.
+4. **The JSON contract and error messages.** The frontend and backend were built by different sub-agents against one contract, so integration tests assert the raw JSON, and a `curl` smoke test against the running server covered every endpoint and error path ([API.md](API.md)).
+5. **The public surface.** The proxy, rate limit, idle expiry and the portal's `[innerHTML]` are what stand between the app and untrusted traffic.
 
-The one exception is [SPEC_PROMPT.md](SPEC_PROMPT.md): I wrote it, and the AI only copied it into the repository.
+How the work was checked:
 
-## What I changed or directed
+- **Build gates:** `TreatWarningsAsErrors` in [`Directory.Build.props`](../backend/Directory.Build.props), a warning-free Angular production build within its size budgets, a Prettier check, and a scan for vulnerable NuGet packages.
+- **Sandbox and mutation checks:** the Core was exercised in a throwaway console project before the tests existed, and the frontend tests were checked by deliberately breaking the source one place at a time ([Testing › Quality checks](TESTING.md#quality-checks)); each break failed the intended test.
+- **Browser checks:** headless Chrome screenshots of every game state and portal page, and a scripted run covering deep links to headings, in-app links, the sidebar, the "On this page" list, the Word download, and a console-error sweep of every route.
+- **My manual acceptance test:** I played the app myself on the isolated snapshot (prompt 10). On a long document the "On this page" list overflowed sideways because of one very long identifier, and listed about 70 headings as a second scrolling page. The fix wraps long words, shows only the h2 sections when a document has more than 24 headings (`MAX_TOC_ENTRIES_WITH_SUBSECTIONS` in [`doc-toc.component.ts`](../frontend/src/app/features/docs/components/doc-toc/doc-toc.component.ts)) and uses a thin scrollbar, with tests in `doc-toc.component.spec.ts`.
+- **Live checks** after deployment: deep links, the published docs, and a game created through the Vercel proxy.
+- **CI** builds and tests both projects and builds the API's Docker image on every push and pull request, and Render deploys only after CI passes.
+- **Clean-clone check:** the repository is cloned into an empty folder and built and tested using only the README commands.
 
-I made my changes as directions, not as hand edits to generated files. They came in two forms.
-
-**Decisions in the specification.** These are the fixed stack, the exact endpoints, the frozen state shape, Option A, the computer moving inside the move request, pair undo, Reset keeping the id and mode, the global scoreboard, the test list, the phases and the quality bar. All of them are in [SPEC_PROMPT.md](SPEC_PROMPT.md).
-
-**Follow-up prompts.**
-- Publish under my personal identity.
-- Keep my email private with the no-reply address.
-- Remove the AI co-author trailer from commits.
-- Restructure both projects to an enterprise standard.
-- Make every document readable from the frontend.
-- Prepare free hosting, specifically on GitHub.
-- Finish the project end to end.
-
-**Deviations from my specification that I accepted.** The AI reported each one with its reason:
-- **Angular 21.2, not the latest (22).** Angular 22's CLI does not run on the Node.js version installed on my machine.
-- **`provideHttpClientTesting()` instead of `HttpClientTestingModule`.** It is the current, non-deprecated replacement with the same purpose.
-- **An extra `canUndo` field in the game state.** The backend decides whether Undo is allowed, so the frontend never re-implements the rule.
-- **One error title for every broken game rule.** Every rule error, including the undo errors, uses the title "Invalid move". The `detail` field always carries the specific message.
-- **Two framework adjustments in [`ServiceCollectionExtensions.cs`](../backend/TicTacToe.Api/Extensions/ServiceCollectionExtensions.cs).** A log filter on the framework's exception middleware, and `SuppressImplicitRequiredAttributeForNonNullableReferenceTypes`. Both are explained under environment issues below.
-- **Layering inside the three projects, not new projects.** The enterprise structure is expressed through folders and namespaces inside the three projects the brief names, because the panel will compare the repository against the brief's layout.
-
-### What a human must still review
-
-These are the places where a subtle mistake would break an acceptance criterion or a public deployment. Each has tests. A test only proves what its author thought of, so I treat each of these as my own review responsibility.
-
-| Area | Where | Why it needs a human | How to check |
-|---|---|---|---|
-| Computer priority | [`ComputerPlayer.ChooseMove`](../backend/TicTacToe.Core/Opponents/ComputerPlayer.cs) and `FindLineCompletingMove` | The order must be exactly win → block → center → corner → any cell. A "completing" line must hold exactly two of the player's marks and one empty cell. The helpers return `Position?` because `FirstOrDefault` on a struct would silently return (0,0), a real cell. | `ComputerPlayerTests` has one test per rule plus `ChooseMove_CanWinAndMustBlock_PrefersWinning`. Also play boards where the computer can both win and block. |
-| Pair undo | [`GameSession.Undo`](../backend/TicTacToe.Core/Sessions/GameSession.cs) | The Option A check must come first. Pair undo uses one extra `UndoLastMove` (an `if`, not a loop) and relies on the move count always being even between requests in computer mode. | `Undo_AfterHumanAndComputerMoved_RemovesBothAndRestoresXTurn`, `Undo_AfterTwoRounds_RemovesOnlyLastPair` |
-| Scoreboard counted once | `GameSession.RecordResultIfFinished`, the `_resultRecorded` flag, and `GameSession.Reset` | The scoreboard must change exactly once per finished game. `Reset` must re-arm the guard, or the next game would never be counted. | `PlayMove_GameWon_RecordsWinExactlyOnce`, `PlayMove_GameDrawn_RecordsDrawExactlyOnce`, `Reset_ThenNextGameEnds_RecordsNextResultToo` |
-| Validation order | [`GameEngine.ApplyMove`](../backend/TicTacToe.Core/Engine/GameEngine.cs) and `EvaluateOutcome` | The order is game over → off board → wrong player → occupied. It decides which message a user sees when several rules are broken at once, and the off-board check must run before the board is indexed. A rejected move must change nothing. The win check must run before the draw check. | `GameEngineTests`; the rejected-move tests assert that the board, turn, history and status are all unchanged |
-| Lock and mapping | [`GameService.RunLocked`](../backend/TicTacToe.Api/Application/GameService.cs) and `CreateGame`; [`ResponseMapper`](../backend/TicTacToe.Api/Mapping/ResponseMapper.cs) | Every action and its mapping must happen inside `lock (session.SyncRoot)`, so a response is a consistent snapshot and a reader never sees the human's move without the computer's reply. `CreateGame` maps the new game before publishing it. The mapper's `board[row][col]` orientation is part of the frozen contract. | `SubmitMove_ParallelMovesToSameCell_ExactlyOneSucceeds`, and the JSON shape test in `GamesApiTests` |
-| CORS origins | [`FrontendCorsOptions`](../backend/TicTacToe.Api/Configuration/FrontendCorsOptions.cs), `Cors:AllowedOrigins` in [`appsettings.json`](../backend/TicTacToe.Api/appsettings.json), `UseTicTacToeApi` in [`WebApplicationExtensions.cs`](../backend/TicTacToe.Api/Extensions/WebApplicationExtensions.cs) | Only the real frontend origin may be allowed. A deployed origin is scheme + host only, with no `/ABB` path and no trailing slash, set through `Cors__AllowedOrigins__0`. CORS must run before the rate limiter so that a 429 still reaches the UI. | `Preflight_FromFrontendOrigin_IsAllowed`, `Preflight_FromOtherOrigin_IsNotAllowed`; from the deployed site, check the browser's network tab |
-| Error mapping and logging | [`GameExceptionHandler.TryHandleAsync`](../backend/TicTacToe.Api/ErrorHandling/GameExceptionHandler.cs) and `ToStatusAndTitle`; `AddErrorHandling` in `ServiceCollectionExtensions.cs` | Only `GameRuleException` (400) and `GameNotFoundException` (404) may be mapped. Anything else must stay a 500 that leaks no detail. The framework's own exception log is switched off, so the handler's `LogError` is now the only record of a real server error and must never be removed. | The 400/404 tests in `GamesApiTests`; read the handler's fall-through branch |
-| Public-hosting limits | [`RateLimitingOptions`](../backend/TicTacToe.Api/Configuration/RateLimitingOptions.cs) (300 requests per 60 s per IP), [`GameSessionOptions`](../backend/TicTacToe.Api/Configuration/GameSessionOptions.cs) (2-hour idle timeout, 10-minute cleanup), [`ExpiredSessionCleanupService`](../backend/TicTacToe.Api/Infrastructure/Maintenance/ExpiredSessionCleanupService.cs), `InMemoryGameRepository.Find` | These values are reasonable guesses for a demo, not the result of load testing. The rate limit is per client only if the platform's proxy passes the real client address (`ASPNETCORE_FORWARDEDHEADERS_ENABLED` in `backend/Dockerfile`). A game idle for 2 hours is deleted, and the player's next action gets "Game … was not found". | `RateLimitingTests`, `CleanupTick_IdleAndRecentlyUsedGames_RemovesOnlyTheIdleOne`; after deploying, check the logs and a 429 from a real client |
-| Markdown rendering and sanitisation | [`markdown-renderer.ts`](../frontend/src/app/features/docs/markdown/markdown-renderer.ts) (`renderMarkdown`, `escapeAttribute`), [`doc-link-resolver.ts`](../frontend/src/app/features/docs/markdown/doc-link-resolver.ts) (`resolveDocLink`), `[innerHTML]` in `doc-viewer-page.component.html` | The HTML relies on Angular's built-in sanitizer; nothing calls `bypassSecurityTrust…`. That is safe because the content is this repository's own docs. If documents ever came from users, a dedicated sanitizer would be needed. Rewritten links must not turn into unexpected URLs. | `markdown-renderer.spec.ts`, `doc-link-resolver.spec.ts`; search the code for `bypassSecurityTrust` |
-| Deployment URLs and placeholders | [`environment.github-pages.ts`](../frontend/src/environments/environment.github-pages.ts) (`https://tictactoe-abb-api.onrender.com`), `baseHref: "/ABB/"` in `angular.json`, `render.yaml`, the `YOUR-API-HOST` placeholder in `vercel.json`, `.github/workflows/deploy-pages.yml` | The Render URL is the one the service *should* get from its name. It must be confirmed after the service is created, or overridden with the `API_BASE_URL` repository variable. GitHub Pages needs a one-time switch to "GitHub Actions" as its source. | Follow [DEPLOYMENT.md](DEPLOYMENT.md), then play a game on the deployed site |
-| Store request flow | [`GameStore`](../frontend/src/app/features/game/state/game.store.ts): `play`, `run`, `init` | `play` must send the `currentPlayer` the backend reported. The loading guard in `run` prevents double submits. `init` builds the create-game request before deciding whether it needs it. That is harmless, because an HTTP observable sends nothing until it is subscribed, but it can be misread as "always creates a game". | `game.store.spec.ts` |
-| Brief transcription | [`PROBLEM_STATEMENT.md`](PROBLEM_STATEMENT.md) against [`assets/Round-2-Problem-Statement.docx`](assets/Round-2-Problem-Statement.docx) | The AI transcribed the Word file. The portal presents the Markdown as the official brief, so it must match the original word for word. | Read the two side by side |
-
-## Which parts were reviewed most carefully, and why
-
-The most scrutiny went where a mistake is easy to make and hard to see.
-
-1. **Pair undo and the scoreboard guard.** These are the rules the brief spells out with examples, and the ones that break silently. An off-by-one undo or a double-counted win still produces a plausible-looking screen. They were checked by the Core author's own sandbox run, by the named tests, and by the adversarial reviewer.
-2. **Computer move selection.** The brief gives an exact priority order. The two classic traps here are preferring a block over a win, and C#'s `default(Position)` being the real cell (0,0). There is a test for each rule and one for win-before-block.
-3. **Concurrency.** The game repository is a singleton shared by every request. A double click or two browser tabs could race on the same game, so the per-game lock and "map inside the lock" have a dedicated parallel test.
-4. **The JSON contract and error messages.** The frontend and backend were built by different agents against one frozen contract. Any drift breaks the UI only at run time, so the contract shape, string enums, null cells and problem+json bodies are pinned by integration tests and the `curl` smoke test.
-5. **The public deployment surface.** CORS, the rate limit, session expiry and the docs portal's `[innerHTML]` are what stands between the app and untrusted traffic once it is online.
-
-These are also the parts I walk through first when I explain the code.
-
-## How quality was checked
-
-- **Contract first, deviations reported.** Every builder worked to the written contract and listed each deviation with its reason. The orchestrator reviewed each one before integrating it.
-- **Build gates.**
-  - `TreatWarningsAsErrors` in [`Directory.Build.props`](../backend/Directory.Build.props): any compiler or analyser warning fails the backend build.
-  - The Angular production build has to be warning-free, within its size budgets.
-  - Prettier formatting is checked.
-  - `dotnet list package --vulnerable --include-transitive` reported no vulnerable packages.
-- **A sandbox before the tests existed.** The Core author compiled the Core into a throwaway console project and ran about 60 checks. They included every message, every win line, pair undo, record-once, and 30,000 parallel scoreboard updates. The test author separately re-derived its expected boards with a small script, as a cross-check of the expectations themselves.
-- **Automated tests.** xUnit for the Core, the application layer and the HTTP pipeline, and Vitest for the frontend. All 75 backend tests passed at the end of the API phase, and all 70 frontend tests at the end of the frontend-test phase. Both suites grew in the enterprise phase; see [TESTING.md](TESTING.md).
-- **A `curl` smoke test against the real server.** It ran 21 steps covering every endpoint and every error path. Its output is pasted into [API.md](API.md). Temporary probe tests, deleted afterwards, also confirmed that an unexpected exception becomes a 500 with no internal detail, logged once, and that malformed bodies produce exactly one meaningful validation error.
-- **Mutation checks on the frontend tests.** The test author broke the source in four places, one at a time: the toast's auto-dismiss time, the winning-cell highlight, the player sent with a move, and the double-submit guard. Each break failed exactly the intended test, which shows the tests can catch real regressions.
-- **Visual checks.** Headless Chrome screenshots at several widths covered in-progress, won, draw and error states (against a stand-in server for the filled-in states), and later the portal pages.
-- **A scripted browser end-to-end run.** Chrome was driven through the DevTools Protocol, with no extra test framework. The portal checks covered:
-  - deep links to a `#heading`;
-  - links inside an article routing in-app without a page reload;
-  - the "On this page" list;
-  - sidebar navigation;
-  - the `.docx` download.
-
-  They were also run under the `/ABB/` base path that GitHub Pages uses, and with a console-error sweep of every route.
-- **Independent reviewer agents.** Separate agents, which had not written the code, reviewed:
-  - requirements traceability, from every line of the brief to code and tests;
-  - the game logic, adversarially;
-  - backend code quality;
-  - frontend code quality.
-
-  Only findings the orchestrator confirmed were fixed.
-- **Clean-clone verification.** The final step clones the repository into an empty folder and follows only the README commands. The backend, the frontend and both test suites must work there.
-- **CI.** The GitHub Actions workflow builds and tests the backend and the frontend, and builds both Docker images, on every push and pull request.
-
-## Assumptions made
+## Assumptions
 
 1. **Option A:** Undo is disabled once a game is won or drawn, and the scoreboard is final for that game.
-2. **The computer's move happens inside the same `POST /api/games/{id}/moves` request.** If the human's move ends the game, the computer does not move.
-3. **Reset keeps the game id and the mode.** "Start a fresh game session" means a fresh game under the same session. New Game creates a new id.
-4. **The scoreboard is global for the server process** ("session-level" = server lifetime). Every game shares it, and on a public deployment so does every visitor.
+2. **The computer moves inside `POST /api/games/{id}/moves`.** If the human's move ends the game, the computer does not move.
+3. **Reset keeps the game id and mode.** "Start a fresh game session" means a fresh game in the same session; New Game creates a new id.
+4. **The scoreboard is global for the server process.** Every game shares it, and on the public deployment so does every visitor.
 5. **In computer mode the human is X and moves first.** A move submitted as O in that mode is rejected as the wrong player.
-6. **`currentPlayer` keeps alternating after the final move.** If X wins on move 5, it reads "O". Once the status is not `InProgress`, the UI shows the result instead of a turn.
-7. **Coordinates are 0-based in the API (`row`/`col` 0–2) and 1-based in the UI** ("Row 1, Column 1").
-8. **The mode selector applies when New Game is pressed.** It does not change the game in progress, and a hint says so.
-9. **A page refresh resumes the current game.** The game id is kept in `sessionStorage` (per tab). If the server no longer knows the id, after a restart or idle cleanup, a new game starts.
-10. **Angular 21.2 instead of 22.** Angular 22's CLI needs Node.js 24.15 or later, and my machine has 24.14. Angular 21.2 has everything the brief needs.
-11. **Pair undo always removes two moves in computer mode,** because the computer replies within the same request and the move count is always even between requests. With no moves, Undo is disabled.
-12. **If one move completes two lines at once, only the first line found is highlighted** (rows, then columns, then diagonals).
-13. **The computer is deterministic.** Among equal options it takes the first in a fixed order: lines as above, then corners (0,0), (0,2), (2,0), (2,2), then the remaining cells row by row.
-14. **When a move breaks several rules, only the first is reported,** in the order game over → off board → wrong player → occupied.
-15. **Status codes.**
-    - An unknown game id returns 404; the brief names only the 400 cases.
-    - A malformed body returns 400 with ASP.NET's validation problem.
-    - Every error is RFC 7807 problem+json.
-    - `POST /api/games` returns 201 Created with a `Location` header.
-16. **The backend adds `canUndo` to the game state,** so the Undo rule lives in one place.
-17. **Enum names are accepted case-insensitively on input and integers are rejected.** Responses always use the canonical names (`"X"`, `"VsComputer"`).
-18. **Locally the API is served over plain HTTP on port 5000,** with no HTTPS redirect, so no development certificate is needed.
-19. **Limits for the public demo:** idle games are deleted after 2 hours (checked every 10 minutes), and each client IP may make 300 requests per minute. Swagger UI is on in every environment, so the deployed API documents itself.
-20. **There is no authentication.** Anyone holding a game id can act on that game, and GUIDs are not guessable in practice.
-21. **The working folder is the repository root.** The specification's layout calls it `tictactoe-abb/`; the GitHub repository is `ABB`.
-22. **The portal renders only this repository's own Markdown,** which is trusted content.
+6. **`currentPlayer` keeps its derived value after the game ends.** The UI shows the result instead of a turn.
+7. **Coordinates are 0-based in the API and 1-based in the UI** ("Row 1, Column 1").
+8. **A mode change applies when New Game is pressed**, and a hint says so.
+9. **A page refresh resumes the game** saved in `sessionStorage` for that tab; if the server no longer has it, a new game starts.
+10. **Pair undo always removes two moves in computer mode**, because the computer replies in the same request.
+11. **If one move completes two lines, the first line found is highlighted** (rows, then columns, then diagonals).
+12. **The computer is deterministic:** among equal options it takes the first in a fixed order.
+13. **When a move breaks several rules, only the first is reported**, in the order game over, off board, wrong player, occupied.
+14. **Status codes:** 201 Created with a `Location` header for a new game, 404 for an unknown id, 400 for a malformed body, and RFC 7807 problem+json for every error.
+15. **Enum names are accepted case-insensitively and integers are rejected**; responses use the canonical names (`"X"`, `"VsComputer"`).
+16. **Locally the API runs over plain HTTP on port 5000**, so no development certificate is needed.
+17. **Limits for the public demo:** idle games are removed after 2 hours, and each client may send 300 requests per minute, of which 30 may create games. Swagger is on in every environment.
+18. **No authentication:** anyone holding a game id can act on that game; GUIDs are not guessable in practice.
+19. **In-memory state is acceptable on the public demo:** a restart, a redeploy or the free API instance going to sleep clears games and the scoreboard, and the UI starts a new game.
 
 ## Trade-offs
 
 | Chosen | Alternative | Why |
 |---|---|---|
-| In-memory store (`ConcurrentDictionary` plus a lock per game) | SQLite with EF Core | The brief allows in-memory storage. There is no schema, no migrations and no file to manage, and it is the fastest thing for a panel to read. `IGameRepository` is the seam where a database can replace it. The cost: games and scores are lost on restart, including when a free host puts the API to sleep. |
-| Option A: no undo after the game ends | Option B: undo after the game ends, reversing the score | The scoreboard stays final, and the record-once guard never has to be undone. Option B would need a "remove result" path on the scoreboard and careful re-arming of the guard. The cost: a player cannot take back a losing last move. |
-| The computer moves inside `POST /moves` | A separate `computer-move` endpoint, or the client asking for the computer's move | One round trip. The human move and the reply happen atomically under the same lock. The client can neither forget nor duplicate the computer's turn, and no half-finished state is ever visible. The cost: a "computer is thinking" pause would have to be faked on the client. |
-| Standalone components, signals and a small `GameStore` | NgModules with an RxJS or NgRx store | Standalone components and zoneless change detection are Angular 21's defaults, and signals are its recommended way to hold state. They need far less boilerplate, and signals read much like React state. RxJS is kept only for HTTP. The cost: no NgRx devtools or time travel, which an app this size does not need. |
-| Full game state in every response | Deltas or events | The frontend never computes a rule, and rendering is the same whatever happened before. The state is tiny (9 cells and a short history). The cost: a few more bytes per response. |
-| Exceptions (`GameRuleException` → 400 via `IExceptionHandler`) | `Result<T>` types returned through every layer | This is idiomatic .NET 8. Controllers describe only the success path, and errors are mapped in one place. The cost: an expected error travels as an exception, and the possible failures are not visible in method signatures. |
-| Controllers with `[ApiController]` | Minimal APIs | The brief's layout names controllers. `[ApiController]` gives automatic 400 validation responses, attributes document the responses in Swagger, and the style is familiar to a Java/Spring reader. The cost: a little more ceremony. |
-| Rule-based computer opponent | Minimax (unbeatable) | The brief prescribes the exact priority order, and a rule-based opponent can be tested one rule at a time. Minimax would sometimes choose differently from that order. The cost: the computer can be beaten, for example with a fork. |
-| GitHub Pages (UI) + Render (API) | One host for both (Docker Compose, DigitalOcean App Platform, or Vercel with rewrites) | I asked for a GitHub-based deployment. Pages can only serve static files, so the API needs a free container host. The cost: the two parts are on different origins, so CORS must be configured; the free API sleeps when idle, so the first request is slow and in-memory state is lost; and two URLs must be kept in sync. The single-host options are also provided, with `/api` on the same origin. |
-| Layering by folders and namespaces inside three projects | Separate Application and Infrastructure projects | The panel will compare the repository with the brief's three-project layout. Folders still keep the layers apart. |
-| Copy `README.md` and `docs/` into the build | Keep a second copy of the docs inside the frontend | One source of truth: the portal shows exactly the files on GitHub. The Angular builder refuses asset folders outside `frontend/`, hence the small copy script. |
+| In-memory storage behind `IGameRepository` and `IScoreboardService` | SQLite, or Redis for multi-instance hosting | The brief accepts in-memory storage, and it is the leanest design to read and run. The interfaces are the seam for a persistent store. Cost: state is lost on restart, and the API runs as one instance. |
+| Option A | Option B (undo after the end, reversing the score) | The scoreboard stays final and the record-once guard never has to be undone. Cost: a player cannot take back a losing last move. |
+| Computer moves inside `POST /moves` | A separate endpoint, or the client asking for the reply | One round trip, applied atomically under one lock; the client can neither forget nor duplicate the computer's turn. |
+| Standalone components, signals, a small `GameStore` | NgModules with NgRx | Angular 21's defaults with far less boilerplate; RxJS stays for HTTP. Cost: no NgRx devtools, which an app this size does not need. |
+| Full game state in every response | Deltas or events | The client never computes a rule and simply replaces its snapshot. Cost: a few hundred bytes per response. |
+| Exceptions mapped by `IExceptionHandler` | `Result<T>` through every layer | Idiomatic .NET 8; controllers describe only the success path. Cost: failures are not visible in method signatures. |
+| Controllers with `[ApiController]` | Minimal APIs | Automatic validation responses, Swagger attributes, and a shape familiar to a Spring reader. Cost: a little more ceremony. |
+| Rule-based opponent | Minimax | The brief prescribes the priority order, and each rule can be tested on its own. Cost: a fork beats it. |
+| Vercel (portal and proxy) + Render (API container) | The API on Vercel with Redis; GitHub Pages + Render; Docker Compose | Vercel's container runtime scales to zero after 5 idle minutes and may run several instances, which in-memory state cannot survive. Render runs one long-lived container, and the proxy keeps the browser on one origin with no CORS. Cost: the free Render instance sleeps after 15 idle minutes, and the first request then takes about a minute. |
+| Layers as folders inside three projects | Separate Application and Infrastructure projects | Matches the three-project layout of my specification while keeping the layers apart. |
+| `README.md` and `docs/` copied into the build | A second copy of the docs in the frontend | One source of truth: the portal shows exactly the files on GitHub. |
 
 ## Commit authorship
 
-Every commit is authored and committed under my own identity, "Vivek Kumar Singh", with my GitHub no-reply email address. Claude Code ran the git commands on my instruction. At my explicit request (prompt 5), the commits carry no AI co-author trailer. I wanted the history to show who is accountable for the code, and this page discloses the AI's involvement in full instead.
+Every commit is authored and committed under my own identity, Vivek Kumar Singh, with my GitHub no-reply address. Claude Code ran the git commands on my instruction, and at my request (prompt 5) the commits carry no AI co-author trailer. I want the history to show who is accountable for the code; this page discloses the AI's involvement in full.
 
-## Environment issues the AI hit and how they were resolved
+## Environment issues and how they were resolved
 
 | Issue | Resolution |
 |---|---|
-| The .NET 8 SDK was installed but not on `PATH` | Every command prefixed `PATH` with `C:\Program Files\dotnet` for that command only |
-| No NuGet package source was configured, so `dotnet restore` failed | A repository-local [`backend/nuget.config`](../backend/nuget.config) that points at nuget.org |
-| The `dotnet new xunit` template pinned test packages with vulnerable transitive dependencies | Upgraded the test packages; now managed in [`Directory.Packages.props`](../backend/Directory.Packages.props) |
-| Angular 22 requires Node.js 24.15 or later; the machine has 24.14 | Used Angular 21.2 (see assumption 10) |
-| Windows Smart App Control sometimes blocked `dotnet test` from loading the freshly built test DLL (`0x800711C7`, "An Application Control policy has blocked this file") | Not bypassed; the security feature stayed on. The AI rebuilt and retried, and later runs passed (75 of 75 at the end of the API phase). |
-| In .NET 8, `ExceptionHandlerMiddleware` logs every handled 400/404 game error as an "unhandled exception" with a stack trace | That log category is filtered out, and `GameExceptionHandler` logs the truly unexpected errors itself |
-| MVC added a second, vague "The request field is required." error to malformed bodies, which could appear first in the list the UI shows | `SuppressImplicitRequiredAttributeForNonNullableReferenceTypes`, so each malformed body produces one error that names the cause |
-| GitHub rejected the push because my email address is private (GH007) | Commits use my GitHub no-reply address (my prompt 3) |
-| The Angular builder refuses asset folders outside the `frontend/` workspace | [`frontend/scripts/copy-docs.mjs`](../frontend/scripts/copy-docs.mjs) copies `README.md` and `docs/` before `start` and `build` |
-| Docker is not installed on the machine | The Dockerfiles could not be built locally. The API's start-up command was simulated by running the published Release build the way the container does, and the CI workflow builds both images on GitHub. |
-| In Windows PowerShell 5.1, `curl` is an alias for `Invoke-WebRequest`, and error bodies are not exposed in `ErrorDetails` | Used `curl.exe` and the Bash tool; [API.md](API.md) shows how to read error bodies from PowerShell |
-| Headless Chrome would not render narrower than about 500 px | Narrow layouts were checked at 500 px; phone widths below that were not screenshot-tested |
+| The .NET 8 SDK was installed but not on `PATH` | Each command added `C:\Program Files\dotnet` to `PATH` for that command only |
+| No NuGet package source was configured | A repository-local [`backend/nuget.config`](../backend/nuget.config) that points at nuget.org |
+| The `dotnet new xunit` template pinned test packages with vulnerable transitive dependencies | Upgraded them; versions are managed centrally in [`Directory.Packages.props`](../backend/Directory.Packages.props) |
+| Angular 22 requires Node.js 24.15 or later; the machine has 24.14 | Angular 21.2, which has everything the brief needs |
+| Windows Smart App Control sometimes blocked `dotnet test` from loading the freshly built test DLL (`0x800711C7`) | The security feature stayed on; a rebuild and retry passed |
+| .NET 8's exception middleware logs every handled 400/404 as an unhandled exception | That log category is filtered, and `GameExceptionHandler` logs unexpected errors itself |
+| MVC added a second, vague "The request field is required." error to malformed bodies | `SuppressImplicitRequiredAttributeForNonNullableReferenceTypes`, so each malformed body produces one error that names the cause |
+| GitHub rejected the push because my email address is private (GH007) | Commits use my GitHub no-reply address |
+| The Angular builder refuses asset folders outside the workspace | [`copy-docs.mjs`](../frontend/scripts/copy-docs.mjs) copies `README.md` and `docs/` before `npm start` and `npm run build` |
+| Docker is not installed on the machine | The published Release build was run the way the container runs it; CI builds the image and Render builds it on deploy |
+| `curl` in Windows PowerShell 5.1 is an alias for `Invoke-WebRequest` | Commands use `curl.exe`, and [API.md](API.md) shows how to read error bodies from PowerShell |
+| My Railway trial had expired, and a Vercel-hosted API cannot keep in-memory state | The API runs on Render's free plan and Vercel proxies `/api` and `/swagger` to it |
+| Render's free instance sleeps when idle, so the first request can take about a minute | The UI says the server may be waking up after 5 seconds of loading, and a 502, 503 or 504 shows a "starting up" message |

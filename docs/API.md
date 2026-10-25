@@ -3,17 +3,31 @@
 The Tic Tac Toe backend is a REST API (ASP.NET Core 8, controllers). It owns all game state: the frontend sends
 every action to it and renders only the state it returns.
 
+## Base URLs
+
+| Environment | API base URL | Swagger UI | Health check |
+|---|---|---|---|
+| Local | `http://localhost:5000/api` | `http://localhost:5000/swagger` | `http://localhost:5000/health` |
+| Live, through the site's proxy | https://tictactoe-abb.vercel.app/api | https://tictactoe-abb.vercel.app/swagger | not proxied; use the API host |
+| Live API host | https://tictactoe-abb-api.onrender.com/api | https://tictactoe-abb-api.onrender.com/swagger | https://tictactoe-abb-api.onrender.com/health |
+
+- The site on Vercel forwards `/api/*` and `/swagger*` to the API host on Render ([vercel.json](../vercel.json)), so the
+  browser stays on one origin and the live site needs no CORS.
+- The OpenAPI document is at `/swagger/v1/swagger.json`. Swagger UI is served in every environment while
+  `Swagger:Enabled` is `true` (the default).
+- The API host runs on Render's free plan: after 15 idle minutes it sleeps, and the next request takes about a
+  minute. While it is waking up or unavailable, the proxy can answer 502, 503 or 504; the UI then shows "The game
+  server is starting up or temporarily unavailable. Please try again in a moment." A restart or redeploy clears
+  every game and the scoreboard.
+
 ## Overview
 
 | | |
 |---|---|
-| Base URL | `http://localhost:5000/api` |
-| Swagger UI | `http://localhost:5000/swagger` (OpenAPI document: `/swagger/v1/swagger.json`), served in every environment while `Swagger:Enabled` is `true` (the default) |
-| Health check | `http://localhost:5000/health` (plain text `Healthy`) |
 | Authentication | none |
-| CORS | `http://localhost:4200` (the Angular dev server) is allowed; configured in `backend/TicTacToe.Api/appsettings.json` under `Cors:AllowedOrigins` |
+| CORS | `http://localhost:4200` (the Angular dev server) is allowed for local development; configured in `backend/TicTacToe.Api/appsettings.json` under `Cors:AllowedOrigins` |
 | Rate limit | 300 requests per 60 seconds per client IP address, of which at most 30 may create a game; above that, **429** (see [Rate limiting](#rate-limiting)) |
-| Storage | in memory; every game and the scoreboard are lost when the server stops. A game nobody has used for 2 hours is removed (see [Idle games](#idle-games)) |
+| Storage | in memory on a single instance; every game and the scoreboard are lost when the server restarts. A game nobody has used for 2 hours is removed (see [Idle games](#idle-games)). State sits behind `IGameRepository` and `IScoreboardService`, so a shared store such as Redis or SQL can replace it for multi-instance hosting |
 
 Every setting above can be changed without code; see [Configuration](#configuration).
 
@@ -55,7 +69,7 @@ Request body:
 ```
 
 - **201 Created** with the new game's `GameState` (empty board, X to move, `canUndo: false`, current scoreboard)
-  and a `Location` header with the game's URL, e.g. `Location: http://localhost:5000/api/games/079c20f6-cd78-4694-809e-fcd138363088`.
+  and a `Location` header with the game's URL, e.g. `Location: http://localhost:5000/api/games/bb158153-15bb-4473-814c-696a0c7239ea`.
 - **400** `ValidationProblemDetails` when `mode` is missing or is not `"TwoPlayer"` / `"VsComputer"`; no game is created.
 - **429** when the client has already created 30 games in the current 60-second window (see [Rate limiting](#rate-limiting)).
 
@@ -69,7 +83,7 @@ Request body:
   "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
   "title": "Game not found",
   "status": 404,
-  "detail": "Game 'df7ce966-cadb-45ec-9ba2-e334b59f105f' was not found."
+  "detail": "Game 'bb7efba1-bc17-4b8a-a5c2-3e67a1e601d5' was not found."
 }
 ```
 
@@ -113,7 +127,7 @@ Request body (all three fields required):
   "errors": {
     "$": ["JSON deserialization for type 'TicTacToe.Api.Contracts.Requests.SubmitMoveRequest' was missing required properties, including the following: col"]
   },
-  "traceId": "00-33bbae1529ff89975f5d01cfa4ba65d3-a89ad8551b106ab5-00"
+  "traceId": "00-512e315cee3404b3165095ced79cb955-7ad956439f2ff54f-00"
 }
 ```
 
@@ -152,8 +166,9 @@ No body. Sets every counter to zero; games in progress are not touched.
 
 ### GET /health — health check
 
-For hosting platforms (Render, DigitalOcean, Docker) to check that the app is alive. It is not under `/api` and is
-never rate limited, so a busy client cannot make the platform think the app is down.
+For the hosting platform to check that the app is alive (Render polls it: `healthCheckPath` in
+[render.yaml](../render.yaml)). It is not under `/api` and is never rate limited, so a busy client cannot make the
+platform think the app is down. On the live deployment it is served by the API host only.
 
 - **200 OK**, `Content-Type: text/plain`, body `Healthy`
 
@@ -180,7 +195,7 @@ Example (a VsComputer game after X played (0,0) and the computer replied in the 
 
 ```json
 {
-  "gameId": "079c20f6-cd78-4694-809e-fcd138363088",
+  "gameId": "bb158153-15bb-4473-814c-696a0c7239ea",
   "mode": "VsComputer",
   "board": [
     ["X", null, null],
@@ -234,12 +249,12 @@ All errors use RFC 7807 `application/problem+json`.
 
 | Property | Present in | Description |
 |---|---|---|
-| `type` | all | Link to the HTTP status definition |
-| `title` | all | Short summary: `"Invalid move"` (any broken game rule, undo included), `"Game not found"`, `"One or more validation errors occurred."` (malformed body), `"Too many requests"` (rate limit), `"Invalid request"` (body too large); for an unknown path or a wrong method, the standard `"Not Found"` / `"Method Not Allowed"` |
+| `type` | all except 413 | Link to the HTTP status definition |
+| `title` | all | Short summary: `"Invalid move"` (any broken game rule, undo included), `"Game not found"`, `"One or more validation errors occurred."` (malformed body), `"Too many requests"` (rate limit), `"Invalid request"` (body too large); otherwise the standard reason phrase, e.g. `"Not Found"` (unknown path), `"Method Not Allowed"`, `"Unsupported Media Type"` |
 | `status` | all | The HTTP status code |
 | `detail` | game-rule, not-found, rate-limit and body-too-large errors | The message to show the player |
-| `errors` | malformed body only | One entry: the offending JSON path (`"$"` for the whole body, `"$.player"`, `"$.col"`) mapped to its messages. A number written as a string for an enum field is reported under the property name instead: `"Mode": ["mode must be \"TwoPlayer\" or \"VsComputer\"."]`, `"Player": ["player must be \"X\" or \"O\"."]` |
-| `traceId` | malformed body, 415, 429, 500 | Correlation id for the server log |
+| `errors` | malformed body only | One entry mapping the offending location to its messages: `""` for an empty or `null` body (`A non-empty request body is required.`), `"$"` when a required property is missing, `"$.mode"`, `"$.player"`, `"$.row"` or `"$.col"` when a value cannot be read. A number written as a string for an enum field is reported under the property name instead: `"Mode": ["mode must be \"TwoPlayer\" or \"VsComputer\"."]`, `"Player": ["player must be \"X\" or \"O\"."]` |
+| `traceId` | malformed body, 415, 429 | Correlation id for the server log |
 
 The frontend shows `detail`, else the first message in `errors`, else `title`.
 
@@ -255,7 +270,7 @@ The frontend shows `detail`, else the first message in `errors`, else `title`.
 
 ## Rate limiting
 
-The API is meant to be deployed as a public demo, so each client IP address may send at most **300 requests per
+The API is deployed as a public demo, so each client IP address may send at most **300 requests per
 60-second window** (a fixed window, ASP.NET Core's built-in rate limiter). Normal play stays far below that.
 At most **30** of those requests may be `POST /api/games`: every game stays in memory until it has been idle for
 2 hours, so one client must not be able to fill the server's memory with games nobody plays.
@@ -273,11 +288,12 @@ Retry-After: 60
 {"type":"https://tools.ietf.org/html/rfc6585#section-4","title":"Too many requests","status":429,"detail":"Too many requests. Please wait a moment and try again.","traceId":"00-…"}
 ```
 
-Behind a hosting platform's proxy, the container image (`backend/Dockerfile`) sets `ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`,
-so the client address is taken from the proxy's `X-Forwarded-For` header instead of the proxy's own address.
-This assumes exactly one proxy that appends the address it received the request from: without a proxy, a client
-could choose its own address by sending the header, and behind two proxies (for example a Vercel rewrite in front
-of Render) the clients behind the first proxy share one limit.
+Behind the hosting platform's proxy, the container image (`backend/Dockerfile`) sets
+`ASPNETCORE_FORWARDEDHEADERS_ENABLED=true`, so the client address is taken from the last entry of the proxy's
+`X-Forwarded-For` header (one hop) instead of the proxy's own address. On the live deployment that hop is the Vercel
+proxy, so visitors who reach the API through the same Vercel address share one limit; requests sent straight to the
+API host are limited per client. The container must always run behind a proxy: without one, a client could choose
+its own address by sending the header.
 
 ## Configuration
 
@@ -286,8 +302,8 @@ All settings live in `backend/TicTacToe.Api/appsettings.json` and are bound to t
 cleanup interval of `00:00:00`) stops startup with a message naming the setting, instead of failing later.
 
 Any setting can be overridden with an environment variable: replace `:` with `__` (two underscores), and address list
-items by index. For example `Cors__AllowedOrigins__0=https://intellectwithvivek.github.io` replaces the first allowed
-origin, and `Cors__AllowedOrigins__1=…` adds a second one.
+items by index. For example `Cors__AllowedOrigins__0=https://app.example.com` replaces the first allowed origin, and
+`Cors__AllowedOrigins__1=…` adds a second one.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -361,7 +377,7 @@ Windows PowerShell 5.1 has `curl` as an alias of `Invoke-WebRequest`, so either 
 real curl as `curl.exe`.
 
 ```powershell
-$base = 'http://localhost:5000/api'
+$base = 'http://localhost:5000/api'   # or the live API: 'https://tictactoe-abb.vercel.app/api'
 
 # Create a game ('TwoPlayer' or 'VsComputer') and keep its id.
 $game = Invoke-RestMethod -Method Post -Uri "$base/games" -ContentType 'application/json' -Body (@{ mode = 'VsComputer' } | ConvertTo-Json)
@@ -399,22 +415,13 @@ curl.exe -s -i -X POST http://localhost:5000/api/games -H "Content-Type: applica
 
 ## Smoke test (curl)
 
-Run on 2026-10-25 against the real server, started from the repository root with:
+Recorded on 2026-10-25 against the API running locally in the Development environment on `http://localhost:5000`,
+as `dotnet run --project backend/TicTacToe.Api` starts it. The commands are shown in Bash syntax with
+`BASE=http://localhost:5000`; in PowerShell, use `curl.exe` and escape the JSON quotes as shown above.
 
-```powershell
-$env:ASPNETCORE_ENVIRONMENT = 'Development'; $env:ASPNETCORE_URLS = 'http://localhost:5000'
-dotnet run --project backend/TicTacToe.Api --no-launch-profile
-```
-
-The commands ran in Git Bash with `BASE=http://localhost:5000`. Game ids, the random unknown id and `traceId`
-values are different on every run. To keep the output readable, each response shows only the status line and the
-`Content-Type`, `Location` and `Access-Control-*` headers (`Date`, `Server`, `Transfer-Encoding` and the no-cache
-headers on errors are left out), and JSON bodies are pretty-printed by a small Node helper. Nothing else is changed.
-
-This run was recorded before the backend was reorganised into layers and before `/health` and the rate limiter
-were added. The JSON contract did not change (the same API tests still pass). The only visible difference is the
-type name in step 8's message: the request classes moved to the `Contracts.Requests` namespace, so a running server
-now reports `TicTacToe.Api.Contracts.Requests.SubmitMoveRequest` (checked against the reorganised server).
+Game ids, the random unknown id and `traceId` values differ on every run. Each response shows the status line and
+the `Content-Type`, `Location` and `Access-Control-*` headers; other headers, such as `Date` and `Server`, are left
+out, and JSON bodies are pretty-printed. Rate limiting is covered by `RateLimitingTests` rather than this session.
 
 ```text
 ### 1. Swagger document is served (status code only)
@@ -425,10 +432,10 @@ $ curl -s -o /dev/null -w "%{http_code}\n" $BASE/swagger/v1/swagger.json
 $ curl -s -i -X POST $BASE/api/games -H "Content-Type: application/json" -d '{"mode":"TwoPlayer"}'
 HTTP/1.1 201 Created
 Content-Type: application/json; charset=utf-8
-Location: http://localhost:5000/api/games/557ebbd5-ae09-4234-b22c-3845732ff777
+Location: http://localhost:5000/api/games/5e2fb5c7-f6c7-46ff-92b3-149401b506d6
 
 {
-  "gameId": "557ebbd5-ae09-4234-b22c-3845732ff777",
+  "gameId": "5e2fb5c7-f6c7-46ff-92b3-149401b506d6",
   "mode": "TwoPlayer",
   "board": [
     [null, null, null],
@@ -443,7 +450,7 @@ Location: http://localhost:5000/api/games/557ebbd5-ae09-4234-b22c-3845732ff777
   "canUndo": false,
   "scoreboard": { "xWins": 0, "oWins": 0, "draws": 0 }
 }
-$ GAME=557ebbd5-ae09-4234-b22c-3845732ff777   # gameId from the response above
+$ GAME=5e2fb5c7-f6c7-46ff-92b3-149401b506d6   # gameId from the response above
 
 ### 3. X plays (0,0)
 $ curl -s -i -X POST $BASE/api/games/$GAME/moves -H "Content-Type: application/json" -d '{"player":"X","row":0,"col":0}'
@@ -451,7 +458,7 @@ HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
 {
-  "gameId": "557ebbd5-ae09-4234-b22c-3845732ff777",
+  "gameId": "5e2fb5c7-f6c7-46ff-92b3-149401b506d6",
   "mode": "TwoPlayer",
   "board": [
     ["X", null, null],
@@ -475,7 +482,7 @@ HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
 {
-  "gameId": "557ebbd5-ae09-4234-b22c-3845732ff777",
+  "gameId": "5e2fb5c7-f6c7-46ff-92b3-149401b506d6",
   "mode": "TwoPlayer",
   "board": [
     ["X", null, null],
@@ -540,9 +547,9 @@ Content-Type: application/problem+json; charset=utf-8
   "title": "One or more validation errors occurred.",
   "status": 400,
   "errors": {
-    "$": ["JSON deserialization for type 'TicTacToe.Api.Contracts.SubmitMoveRequest' was missing required properties, including the following: col"]
+    "$": ["JSON deserialization for type 'TicTacToe.Api.Contracts.Requests.SubmitMoveRequest' was missing required properties, including the following: col"]
   },
-  "traceId": "00-33bbae1529ff89975f5d01cfa4ba65d3-a89ad8551b106ab5-00"
+  "traceId": "00-512e315cee3404b3165095ced79cb955-7ad956439f2ff54f-00"
 }
 
 ### 9. Undo (Two Player): O's move is removed and it is O's turn again
@@ -551,7 +558,7 @@ HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
 {
-  "gameId": "557ebbd5-ae09-4234-b22c-3845732ff777",
+  "gameId": "5e2fb5c7-f6c7-46ff-92b3-149401b506d6",
   "mode": "TwoPlayer",
   "board": [
     ["X", null, null],
@@ -575,7 +582,7 @@ HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
 {
-  "gameId": "557ebbd5-ae09-4234-b22c-3845732ff777",
+  "gameId": "5e2fb5c7-f6c7-46ff-92b3-149401b506d6",
   "mode": "TwoPlayer",
   "board": [
     [null, null, null],
@@ -597,7 +604,7 @@ HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
 {
-  "gameId": "557ebbd5-ae09-4234-b22c-3845732ff777",
+  "gameId": "5e2fb5c7-f6c7-46ff-92b3-149401b506d6",
   "mode": "TwoPlayer",
   "board": [
     [null, null, null],
@@ -627,7 +634,7 @@ HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
 {
-  "gameId": "557ebbd5-ae09-4234-b22c-3845732ff777",
+  "gameId": "5e2fb5c7-f6c7-46ff-92b3-149401b506d6",
   "mode": "TwoPlayer",
   "board": [
     ["X", "X", "X"],
@@ -681,10 +688,10 @@ Content-Type: application/problem+json
 $ curl -s -i -X POST $BASE/api/games -H "Content-Type: application/json" -d '{"mode":"VsComputer"}'
 HTTP/1.1 201 Created
 Content-Type: application/json; charset=utf-8
-Location: http://localhost:5000/api/games/079c20f6-cd78-4694-809e-fcd138363088
+Location: http://localhost:5000/api/games/bb158153-15bb-4473-814c-696a0c7239ea
 
 {
-  "gameId": "079c20f6-cd78-4694-809e-fcd138363088",
+  "gameId": "bb158153-15bb-4473-814c-696a0c7239ea",
   "mode": "VsComputer",
   "board": [
     [null, null, null],
@@ -699,7 +706,7 @@ Location: http://localhost:5000/api/games/079c20f6-cd78-4694-809e-fcd138363088
   "canUndo": false,
   "scoreboard": { "xWins": 1, "oWins": 0, "draws": 0 }
 }
-$ CPU_GAME=079c20f6-cd78-4694-809e-fcd138363088   # gameId from the response above
+$ CPU_GAME=bb158153-15bb-4473-814c-696a0c7239ea   # gameId from the response above
 
 ### 16. X plays (0,0); the response already contains the computer's reply (O takes the center)
 $ curl -s -i -X POST $BASE/api/games/$CPU_GAME/moves -H "Content-Type: application/json" -d '{"player":"X","row":0,"col":0}'
@@ -707,7 +714,7 @@ HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
 {
-  "gameId": "079c20f6-cd78-4694-809e-fcd138363088",
+  "gameId": "bb158153-15bb-4473-814c-696a0c7239ea",
   "mode": "VsComputer",
   "board": [
     ["X", null, null],
@@ -732,7 +739,7 @@ HTTP/1.1 200 OK
 Content-Type: application/json; charset=utf-8
 
 {
-  "gameId": "079c20f6-cd78-4694-809e-fcd138363088",
+  "gameId": "bb158153-15bb-4473-814c-696a0c7239ea",
   "mode": "VsComputer",
   "board": [
     [null, null, null],
@@ -763,7 +770,7 @@ Content-Type: application/json; charset=utf-8
 { "xWins": 0, "oWins": 0, "draws": 0 }
 
 ### 20. Unknown game id -> 404
-$ UNKNOWN=df7ce966-cadb-45ec-9ba2-e334b59f105f   # a random GUID
+$ UNKNOWN=bb7efba1-bc17-4b8a-a5c2-3e67a1e601d5   # a random GUID
 $ curl -s -i $BASE/api/games/$UNKNOWN
 HTTP/1.1 404 Not Found
 Content-Type: application/problem+json
@@ -772,7 +779,7 @@ Content-Type: application/problem+json
   "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
   "title": "Game not found",
   "status": 404,
-  "detail": "Game 'df7ce966-cadb-45ec-9ba2-e334b59f105f' was not found."
+  "detail": "Game 'bb7efba1-bc17-4b8a-a5c2-3e67a1e601d5' was not found."
 }
 
 ### 21. CORS preflight from the Angular dev server
@@ -781,4 +788,11 @@ HTTP/1.1 204 No Content
 Access-Control-Allow-Headers: content-type
 Access-Control-Allow-Methods: POST
 Access-Control-Allow-Origin: http://localhost:4200
+
+### 22. Health check
+$ curl -s -i $BASE/health
+HTTP/1.1 200 OK
+Content-Type: text/plain
+
+Healthy
 ```
