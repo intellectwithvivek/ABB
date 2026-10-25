@@ -1,0 +1,15 @@
+<div class="board" role="group" aria-label="Game board">
+  <!-- The grid never changes shape, so tracking by index is correct. -->
+  @for (cells of board(); track $index; let row = $index) {
+    @for (value of cells; track $index; let col = $index) {
+      <app-cell
+        [value]="value"
+        [row]="row"
+        [col]="col"
+        [highlighted]="isWinningCell(row, col)"
+        [disabled]="disabled()"
+        (selected)="cellSelected.emit({ row, col })"
+      />
+    }
+  }
+</div>

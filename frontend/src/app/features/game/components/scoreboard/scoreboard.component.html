@@ -1,0 +1,26 @@
+<section class="panel" aria-labelledby="scoreboard-title">
+  <h2 id="scoreboard-title" class="panel-title">Scoreboard</h2>
+  @let scores = scoreboard();
+  <dl class="scores">
+    <div class="score score--x">
+      <dt>X wins</dt>
+      <dd>{{ scores?.xWins ?? '–' }}</dd>
+    </div>
+    <div class="score score--o">
+      <dt>O wins</dt>
+      <dd>{{ scores?.oWins ?? '–' }}</dd>
+    </div>
+    <div class="score">
+      <dt>Draws</dt>
+      <dd>{{ scores?.draws ?? '–' }}</dd>
+    </div>
+  </dl>
+  <button
+    type="button"
+    class="button reset"
+    [disabled]="scores === null"
+    (click)="resetScoreboard.emit()"
+  >
+    Reset Scoreboard
+  </button>
+</section>

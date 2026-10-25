@@ -1,0 +1,9 @@
+@if (message(); as text) {
+  <div class="toast" role="alert">
+    <span class="icon" aria-hidden="true">!</span>
+    <p class="text">{{ text }}</p>
+    <button type="button" class="close" aria-label="Dismiss error" (click)="dismissed.emit()">
+      ×
+    </button>
+  </div>
+}

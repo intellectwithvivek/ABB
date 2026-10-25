@@ -1,0 +1,86 @@
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.new-game {
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.button-row > * {
+  flex: 1 1 auto;
+}
+
+.mode-picker {
+  display: flex;
+  margin: 0;
+  padding: 4px;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.mode-option {
+  position: relative;
+  flex: 1;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
+}
+
+/* The native radio stays in the page (keyboard and screen reader support); only its look is hidden. */
+.mode-option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+
+.mode-option:hover {
+  color: var(--color-text);
+}
+
+.mode-option--selected {
+  color: var(--color-accent);
+  background: var(--color-surface);
+  box-shadow: 0 1px 3px rgb(16 24 40 / 12%);
+}
+
+.mode-option:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.mode-picker:disabled .mode-option {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.hint {
+  font-size: 0.875rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+/* The empty hint takes no space. */
+.hint:not(:empty) {
+  margin-top: 0.75rem;
+}

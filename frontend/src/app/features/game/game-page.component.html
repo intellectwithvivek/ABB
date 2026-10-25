@@ -1,0 +1,34 @@
+<header class="header">
+  <h1 class="title">Tic Tac Toe</h1>
+  <p class="subtitle">Play a friend or the computer. Every move is checked by the server.</p>
+</header>
+
+<div class="layout">
+  <section class="panel play-area" aria-label="Game" [attr.aria-busy]="store.loading()">
+    <app-status-bar [game]="store.game()" [loading]="store.loading()" />
+    <app-board
+      [board]="store.board()"
+      [winningCells]="store.winningCells()"
+      [disabled]="!store.canPlay()"
+      (cellSelected)="store.play($event.row, $event.col)"
+    />
+    <app-controls
+      [selectedMode]="store.selectedMode()"
+      [activeMode]="store.game()?.mode ?? null"
+      [canUndo]="store.canUndo()"
+      [canReset]="store.canReset()"
+      [busy]="store.loading()"
+      (modeSelected)="store.selectMode($event)"
+      (newGame)="store.newGame()"
+      (undo)="store.undo()"
+      (resetGame)="store.resetGame()"
+    />
+  </section>
+
+  <div class="sidebar">
+    <app-scoreboard [scoreboard]="store.scoreboard()" (resetScoreboard)="store.resetScoreboard()" />
+    <app-move-history [moves]="store.moves()" />
+  </div>
+</div>
+
+<app-error-toast [message]="store.errorMessage()" (dismissed)="store.dismissError()" />

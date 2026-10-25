@@ -1,0 +1,81 @@
+/*
+ * Bottom centre on phones. On wider screens it sits top right, below the site header, where it
+ * cannot cover the game controls (New Game is often the way out of the error it reports).
+ */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  width: min(440px, calc(100vw - 2rem));
+  padding: 0.85rem 0.85rem 0.85rem 1rem;
+  color: var(--color-danger);
+  background: var(--color-danger-soft);
+  border: 1px solid color-mix(in srgb, var(--color-danger) 25%, transparent);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgb(16 24 40 / 15%);
+  translate: -50% 0;
+  animation: fade-in 0.2s ease-out;
+}
+
+@media (min-width: 600px) {
+  .toast {
+    top: 4.5rem;
+    right: 1rem;
+    bottom: auto;
+    left: auto;
+    width: min(400px, calc(100vw - 2rem));
+    translate: none;
+  }
+}
+
+.icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--color-text-inverse);
+  background: var(--color-danger);
+  border-radius: 50%;
+}
+
+.text {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.close {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.close:hover {
+  background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+}
+
+.close:focus-visible {
+  outline: 3px solid var(--color-focus);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}

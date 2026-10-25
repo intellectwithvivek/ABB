@@ -1,0 +1,66 @@
+:host {
+  display: block;
+}
+
+.cell {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  font: inherit;
+  font-size: clamp(2.25rem, 10vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--color-text);
+  background: var(--color-surface);
+  /* An empty cell has no text, so its border is what shows it is a button (3:1 contrast). */
+  border: 2px solid var(--color-border-control);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.cell:hover:not([aria-disabled='true']) {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.cell:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.cell[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+.cell--empty[aria-disabled='true'] {
+  background: var(--color-surface-muted);
+}
+
+.cell--x {
+  color: var(--color-x);
+}
+
+.cell--o {
+  color: var(--color-o);
+}
+
+/* The thicker border marks the winning line without relying on colour alone. */
+.cell--winning {
+  background: var(--color-success-soft);
+  border-width: 4px;
+  border-color: var(--color-success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 30%, transparent);
+  animation: pop 0.35s ease-out;
+}
+
+@keyframes pop {
+  50% {
+    transform: scale(1.08);
+  }
+}

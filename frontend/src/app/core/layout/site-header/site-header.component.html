@@ -1,0 +1,33 @@
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" routerLink="/">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M9 3v18M15 3v18M3 9h18M3 15h18" />
+      </svg>
+      Tic Tac Toe
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      @for (link of navLinks; track link.path) {
+        <a
+          class="nav-link"
+          [routerLink]="link.path"
+          routerLinkActive="nav-link--active"
+          [routerLinkActiveOptions]="{ exact: link.exact }"
+          ariaCurrentWhenActive="page"
+        >
+          {{ link.label }}
+        </a>
+      }
+      <span class="nav-divider" aria-hidden="true"></span>
+      <a class="nav-link" [href]="config.swaggerUrl" target="_blank" rel="noopener">
+        API <span class="external-icon" aria-hidden="true">↗</span>
+        <span class="visually-hidden">(opens in a new tab)</span>
+      </a>
+      <a class="nav-link" [href]="config.repositoryUrl" target="_blank" rel="noopener">
+        GitHub <span class="external-icon" aria-hidden="true">↗</span>
+        <span class="visually-hidden">(opens in a new tab)</span>
+      </a>
+    </nav>
+  </div>
+</header>

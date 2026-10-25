@@ -1,0 +1,19 @@
+@if (visibleEntries().length > 0) {
+  <nav class="toc" aria-labelledby="doc-toc-title">
+    <p id="doc-toc-title" class="toc-title">On this page</p>
+    <ul class="entries">
+      @for (entry of visibleEntries(); track entry.id) {
+        <li>
+          <a
+            class="entry"
+            [class.entry--nested]="entry.level === 3"
+            [routerLink]="['/docs', slug()]"
+            [fragment]="entry.id"
+          >
+            {{ entry.text }}
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+}

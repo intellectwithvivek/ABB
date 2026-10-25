@@ -1,0 +1,13 @@
+<button
+  type="button"
+  class="cell"
+  [class.cell--x]="value() === 'X'"
+  [class.cell--o]="value() === 'O'"
+  [class.cell--empty]="value() === null"
+  [class.cell--winning]="highlighted()"
+  [attr.aria-disabled]="locked()"
+  [attr.aria-label]="ariaLabel()"
+  (click)="select()"
+>
+  {{ value() }}
+</button>

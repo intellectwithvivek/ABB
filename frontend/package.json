@@ -3,10 +3,17 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "copy-docs": "node scripts/copy-docs.mjs",
+    "prestart": "npm run copy-docs",
     "start": "ng serve",
+    "prebuild": "npm run copy-docs",
     "build": "ng build",
+    "prewatch": "npm run copy-docs",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "test:ci": "ng test --watch=false",
+    "format": "prettier --write \"src/**/*.{ts,html,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,html,css}\""
   },
   "private": true,
   "packageManager": "npm@11.9.0",
@@ -14,9 +21,9 @@
     "@angular/common": "^21.2.0",
     "@angular/compiler": "^21.2.0",
     "@angular/core": "^21.2.0",
-    "@angular/forms": "^21.2.0",
     "@angular/platform-browser": "^21.2.0",
     "@angular/router": "^21.2.0",
+    "marked": "^18.1.1",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

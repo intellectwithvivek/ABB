@@ -1,3 +1,36 @@
-main {
-  text-align: center;
+/* Column layout keeps the footer at the bottom of the window on short pages. */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main {
+  flex: 1;
+}
+
+/* <main> is focused only by the skip link; the jump itself is the visible feedback. */
+.main:focus {
+  outline: none;
+}
+
+/* Off-screen until a keyboard user tabs to it. */
+.skip-link {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 10;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
 }

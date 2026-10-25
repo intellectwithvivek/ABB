@@ -1,0 +1,121 @@
+<section class="hero">
+  <div class="hero-text">
+    <p class="eyebrow">Review portal</p>
+    <h1 class="hero-title">Tic Tac Toe</h1>
+    <p class="hero-pitch">
+      Angular 21 + .NET 8 · backend-owned game state · ABB Round 2 assessment
+    </p>
+    <p class="hero-summary">
+      Two Player and Vs Computer modes, undo, move history and a scoreboard. Every rule runs in the
+      .NET API; the Angular app shows exactly the state the API returns.
+    </p>
+    <div class="hero-actions">
+      <a class="button button--primary" routerLink="/play">Play now</a>
+      <a class="button" routerLink="/docs">Read the docs</a>
+      <a class="button" [href]="config.swaggerUrl" target="_blank" rel="noopener">
+        API reference <span aria-hidden="true">↗</span>
+        <span class="visually-hidden">(opens in a new tab)</span>
+      </a>
+      <a class="button" [href]="config.repositoryUrl" target="_blank" rel="noopener">
+        Source on GitHub <span aria-hidden="true">↗</span>
+        <span class="visually-hidden">(opens in a new tab)</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Decoration only: a finished game with X's winning diagonal highlighted. -->
+  <div class="hero-board" aria-hidden="true">
+    <span class="mark mark--x mark--win">X</span><span class="mark mark--o">O</span><span></span>
+    <span class="mark mark--o">O</span><span class="mark mark--x mark--win">X</span><span></span>
+    <span></span><span class="mark mark--o">O</span><span class="mark mark--x mark--win">X</span>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="review-title">
+  <h2 id="review-title" class="section-title">How to review in 5 minutes</h2>
+  <ol class="steps">
+    <li class="step">
+      <h3 class="step-title">Play a game</h3>
+      <p>Try both modes: win, draw, undo and reset. Every move is validated by the API.</p>
+      <a class="step-link" routerLink="/play"> Open the game <span aria-hidden="true">→</span> </a>
+    </li>
+    <li class="step">
+      <h3 class="step-title">Compare the brief with the build</h3>
+      <p>The traceability matrix maps each requirement to the code and tests that meet it.</p>
+      <a class="step-link" routerLink="/docs/traceability">
+        Traceability <span aria-hidden="true">→</span>
+      </a>
+    </li>
+    <li class="step">
+      <h3 class="step-title">Explore the API</h3>
+      <p>Swagger lists every endpoint. Send an invalid move to see the error contract.</p>
+      <a class="step-link" [href]="config.swaggerUrl" target="_blank" rel="noopener">
+        Swagger UI <span aria-hidden="true">↗</span>
+        <span class="visually-hidden">(opens in a new tab)</span>
+      </a>
+    </li>
+    <li class="step">
+      <h3 class="step-title">Read the decisions</h3>
+      <p>Why the backend owns the state, why Option A for undo, and the trade-offs made.</p>
+      <a class="step-link" routerLink="/docs/decisions">
+        Design decisions <span aria-hidden="true">→</span>
+      </a>
+    </li>
+    <li class="step">
+      <h3 class="step-title">Run it with the tests</h3>
+      <p>The README has the commands to start the API and the UI and to run both test suites.</p>
+      <a class="step-link" routerLink="/docs/readme"> README <span aria-hidden="true">→</span> </a>
+    </li>
+  </ol>
+</section>
+
+<section class="section" aria-labelledby="features-title">
+  <h2 id="features-title" class="section-title">What the brief asks for, and how it is met</h2>
+  <ul class="features">
+    @for (feature of features; track feature.title) {
+      <li class="panel feature">
+        <h3 class="feature-title">{{ feature.title }}</h3>
+        <p class="feature-description">{{ feature.description }}</p>
+        <p class="feature-reference">{{ feature.briefReference }}</p>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="section" aria-labelledby="architecture-title">
+  <h2 id="architecture-title" class="section-title">Architecture</h2>
+  <app-architecture-diagram />
+  <a class="section-link" routerLink="/docs/architecture">
+    Read the architecture guide <span aria-hidden="true">→</span>
+  </a>
+</section>
+
+<div class="section columns">
+  <section aria-labelledby="stack-title">
+    <h2 id="stack-title" class="section-title">Tech stack</h2>
+    <dl class="stack">
+      @for (group of techStack; track group.area) {
+        <div class="stack-group">
+          <dt class="stack-area">{{ group.area }}</dt>
+          @for (item of group.items; track item) {
+            <dd class="chip">{{ item }}</dd>
+          }
+        </div>
+      }
+    </dl>
+  </section>
+
+  <section aria-labelledby="docs-title">
+    <h2 id="docs-title" class="section-title">Key documents</h2>
+    <ul class="doc-links">
+      @for (doc of keyDocs; track doc.slug) {
+        <li>
+          <a class="doc-link" [routerLink]="['/docs', doc.slug]">
+            <span class="doc-link-title">{{ doc.title }}</span>
+            <span class="doc-link-description">{{ doc.description }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+</div>

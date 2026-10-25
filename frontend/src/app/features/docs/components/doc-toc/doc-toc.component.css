@@ -1,0 +1,60 @@
+/*
+ * Sticky beside the article. If the list is still taller than a small screen it scrolls on its own,
+ * with a thin scrollbar so it does not compete with the page's own scrollbar.
+ */
+.toc {
+  position: sticky;
+  top: 1.5rem;
+  max-height: calc(100vh - 3rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+  padding-left: 1rem;
+  border-left: 1px solid var(--color-border);
+}
+
+.toc-title {
+  margin-bottom: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* minmax(0, 1fr): without it one long unbreakable heading widens the whole list past its column. */
+.entries {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* overflow-wrap: anywhere lets identifiers such as SuppressImplicitRequired… wrap instead of overflowing. */
+.entry {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.entry--nested {
+  padding-left: 0.85rem;
+  font-size: 0.8rem;
+}
+
+.entry:hover {
+  color: var(--color-accent);
+}
+
+.entry:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}

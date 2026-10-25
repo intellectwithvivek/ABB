@@ -1,0 +1,40 @@
+<div class="controls">
+  <div class="button-row">
+    <button type="button" class="button" [disabled]="!canUndo()" (click)="undo.emit()">
+      Undo Last Move
+    </button>
+    <button type="button" class="button" [disabled]="!canReset()" (click)="resetGame.emit()">
+      Reset Game
+    </button>
+  </div>
+
+  <div class="new-game">
+    <div class="button-row">
+      <!-- Locked during a request: a game resumed on page load sets the mode when it arrives. -->
+      <fieldset class="mode-picker" [disabled]="busy()">
+        <legend class="visually-hidden">Game mode</legend>
+        @for (mode of modes; track mode) {
+          <label class="mode-option" [class.mode-option--selected]="mode === selectedMode()">
+            <input
+              type="radio"
+              name="game-mode"
+              [value]="mode"
+              [checked]="mode === selectedMode()"
+              (change)="modeSelected.emit(mode)"
+            />
+            {{ modeLabels[mode] }}
+          </label>
+        }
+      </fieldset>
+      <button type="button" class="button button--primary" (click)="newGame.emit()">
+        New Game
+      </button>
+    </div>
+    <!-- Always in the page, even when empty, so screen readers announce the hint as it appears. -->
+    <p class="hint" aria-live="polite">
+      @if (modeChangePending()) {
+        Mode applies when you start a new game.
+      }
+    </p>
+  </div>
+</div>

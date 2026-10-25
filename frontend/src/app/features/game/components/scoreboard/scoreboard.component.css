@@ -1,0 +1,47 @@
+.scores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.score {
+  --score-color: var(--color-text);
+  --score-background: var(--color-surface-muted);
+  display: flex;
+  /* Number above its label on screen, while the DOM keeps <dt> before <dd> for screen readers. */
+  flex-direction: column-reverse;
+  align-items: center;
+  padding: 0.6rem 0.25rem;
+  border-radius: var(--radius-md);
+  background: var(--score-background);
+}
+
+.score--x {
+  --score-color: var(--color-x);
+  --score-background: var(--color-x-soft);
+}
+
+.score--o {
+  --score-color: var(--color-o);
+  --score-background: var(--color-o-soft);
+}
+
+.score dt {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.score dd {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--score-color);
+}
+
+.reset {
+  width: 100%;
+}

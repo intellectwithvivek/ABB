@@ -1,3 +1,15 @@
-<main>
-  <h1>Tic Tac Toe</h1>
+<!--
+  A bare "#main-content" href resolves against <base href> ("/#main-content"), so on /play it would
+  load the home page. The click handler moves focus instead; the href keeps it a real link.
+-->
+<a class="skip-link" href="#main-content" (click)="$event.preventDefault(); mainContent.focus()">
+  Skip to main content
+</a>
+
+<app-site-header />
+
+<main id="main-content" class="main" tabindex="-1" #mainContent>
+  <router-outlet />
 </main>
+
+<app-site-footer />

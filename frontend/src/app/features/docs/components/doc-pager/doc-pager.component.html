@@ -1,0 +1,14 @@
+<nav class="pager" aria-label="Previous and next document">
+  @if (previous(); as previousDoc) {
+    <a class="page-link" [routerLink]="['/docs', previousDoc.slug]">
+      <span class="direction"><span aria-hidden="true">←</span> Previous</span>
+      <span class="page-title">{{ previousDoc.title }}</span>
+    </a>
+  }
+  @if (next(); as nextDoc) {
+    <a class="page-link page-link--next" [routerLink]="['/docs', nextDoc.slug]">
+      <span class="direction">Next <span aria-hidden="true">→</span></span>
+      <span class="page-title">{{ nextDoc.title }}</span>
+    </a>
+  }
+</nav>

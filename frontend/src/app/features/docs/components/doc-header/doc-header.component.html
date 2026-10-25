@@ -1,0 +1,16 @@
+<header class="doc-header">
+  <p class="eyebrow">{{ doc().category }}</p>
+  <h1 class="title">{{ doc().title }}</h1>
+  <p class="description">{{ doc().description }}</p>
+
+  <div class="actions">
+    <a class="button button--small" [href]="sourceUrl()" target="_blank" rel="noopener">
+      View source on GitHub <span aria-hidden="true">↗</span>
+      <span class="visually-hidden">(opens in a new tab)</span>
+    </a>
+    @if (originalUrl(); as url) {
+      <a class="button button--small" [href]="url" download> Download original (.docx) </a>
+    }
+  </div>
+  <p class="source-path">{{ doc().sourcePath }}</p>
+</header>

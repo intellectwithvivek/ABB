@@ -1,0 +1,12 @@
+<div class="status" [class]="'status--' + tone()">
+  <p class="status-message">{{ message() }}</p>
+  <p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>
+  <div class="status-meta">
+    @if (loading()) {
+      <span class="working">Working…</span>
+    }
+    @if (modeLabel(); as label) {
+      <span class="mode-badge">{{ label }}</span>
+    }
+  </div>
+</div>

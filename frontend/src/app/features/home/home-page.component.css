@@ -1,0 +1,267 @@
+:host {
+  display: block;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  padding: 0 1.25rem 4rem;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 3rem;
+  padding: 4rem 0 3.5rem;
+}
+
+.hero-title {
+  margin-top: 0.4rem;
+  font-size: clamp(2.5rem, 7vw, 4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.hero-pitch {
+  margin-top: 1rem;
+  font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+  font-weight: 600;
+}
+
+.hero-summary {
+  max-width: 40rem;
+  margin-top: 0.75rem;
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.hero-board {
+  display: grid;
+  grid-template-columns: repeat(3, 4.5rem);
+  grid-auto-rows: 4.5rem;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card-hover);
+  transform: rotate(-3deg);
+}
+
+.hero-board > span {
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  font-size: 2.25rem;
+  font-weight: 800;
+}
+
+.hero-board .mark--x {
+  color: var(--color-x);
+}
+
+.hero-board .mark--o {
+  color: var(--color-o);
+}
+
+.hero-board .mark--win {
+  background: var(--color-success-soft);
+  box-shadow: inset 0 0 0 2px var(--color-success);
+}
+
+.section {
+  padding-top: 3rem;
+}
+
+.section-title {
+  margin-bottom: 1.25rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.steps,
+.features,
+.doc-links {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps {
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+  counter-reset: step;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  counter-increment: step;
+}
+
+.step::before {
+  content: counter(step);
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-bottom: 0.35rem;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--color-accent);
+}
+
+.step-title,
+.feature-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.step p,
+.feature-description {
+  flex: 1;
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.step-link,
+.section-link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.step-link:hover,
+.section-link:hover {
+  text-decoration: underline;
+}
+
+.section-link {
+  display: inline-block;
+  margin-top: 1rem;
+}
+
+/* min(…, 100%) lets a track shrink below its usual minimum on very narrow screens (no sideways scroll). */
+.features {
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.feature-reference {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.5rem;
+}
+
+.stack {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+}
+
+.stack-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stack-area {
+  width: 100%;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+}
+
+.chip {
+  margin: 0;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.doc-links {
+  gap: 0.6rem;
+}
+
+.doc-link {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-decoration: none;
+}
+
+.doc-link:hover {
+  border-color: var(--color-accent);
+}
+
+.doc-link-title {
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.doc-link-description {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+a:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  :host {
+    padding: 0 1rem 3rem;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 2.5rem 0 1rem;
+  }
+
+  .hero-board {
+    display: none;
+  }
+
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

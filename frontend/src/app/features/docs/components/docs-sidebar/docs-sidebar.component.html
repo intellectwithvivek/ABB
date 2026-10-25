@@ -1,0 +1,35 @@
+<nav class="sidebar" aria-label="Documents">
+  <button
+    type="button"
+    class="toggle"
+    aria-controls="docs-sidebar-list"
+    [attr.aria-expanded]="expanded()"
+    (click)="toggle()"
+  >
+    All documents
+    <span class="toggle-icon" aria-hidden="true">{{ expanded() ? '−' : '+' }}</span>
+  </button>
+
+  <div id="docs-sidebar-list" class="sections" [class.sections--expanded]="expanded()">
+    @for (section of sections; track section.category) {
+      <div class="section">
+        <p class="section-title">{{ section.category }}</p>
+        <ul class="links">
+          @for (doc of section.docs; track doc.slug) {
+            <li>
+              <a
+                class="link"
+                [routerLink]="['/docs', doc.slug]"
+                routerLinkActive="link--active"
+                ariaCurrentWhenActive="page"
+                (click)="expanded.set(false)"
+              >
+                {{ doc.title }}
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+</nav>

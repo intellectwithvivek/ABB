@@ -1,0 +1,32 @@
+<section class="panel" aria-labelledby="move-history-title">
+  <h2 id="move-history-title" class="panel-title">Move history</h2>
+  @if (moves().length === 0) {
+    <p class="empty">No moves yet</p>
+  } @else {
+    <table class="moves">
+      <thead>
+        <tr>
+          <th scope="col">Move</th>
+          <th scope="col">Player</th>
+          <th scope="col">Position</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (move of moves(); track move.moveNumber) {
+          <tr>
+            <td>{{ move.moveNumber }}</td>
+            <td
+              class="player"
+              [class.player--x]="move.player === 'X'"
+              [class.player--o]="move.player === 'O'"
+            >
+              {{ move.player }}
+            </td>
+            <!-- The API is 0-based; people count rows and columns from 1. -->
+            <td>Row {{ move.row + 1 }}, Column {{ move.col + 1 }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

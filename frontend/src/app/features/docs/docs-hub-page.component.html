@@ -1,0 +1,25 @@
+<header class="intro">
+  <p class="eyebrow">Documentation</p>
+  <h1 class="title">Everything behind the game</h1>
+  <p class="lead">
+    The brief, the design and the evidence that it is met. These are the same Markdown files as in
+    the repository, rendered here so you can read them without leaving the app.
+  </p>
+</header>
+
+@for (section of sections; track section.category) {
+  <section class="section" [attr.aria-labelledby]="'category-' + $index">
+    <h2 class="section-title" [id]="'category-' + $index">{{ section.category }}</h2>
+    <ul class="cards">
+      @for (doc of section.docs; track doc.slug) {
+        <li>
+          <a class="card" [routerLink]="['/docs', doc.slug]">
+            <span class="card-title">{{ doc.title }}</span>
+            <span class="card-description">{{ doc.description }}</span>
+            <span class="card-path">{{ doc.sourcePath }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+}

@@ -1,0 +1,72 @@
+.layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) 200px;
+  gap: 3rem;
+  align-items: start;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+/*
+ * The sidebar and the table of contents are position: sticky inside these columns. A sticky
+ * element only moves within its parent, so the columns stretch to the full height of the row.
+ */
+.side-column {
+  align-self: stretch;
+}
+
+/* min-width: 0 keeps long words and URLs from widening the column; tables and code scroll instead. */
+.content {
+  min-width: 0;
+  padding: 2.25rem 2.5rem 2.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.state-loading {
+  padding: 2rem 0;
+  color: var(--color-text-muted);
+}
+
+.state-panel {
+  display: grid;
+  justify-items: start;
+  gap: 0.75rem;
+  padding: 2rem;
+}
+
+.state-panel p:not(.eyebrow) {
+  color: var(--color-text-muted);
+}
+
+.state-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+/* The table of contents is the first thing to go when the window narrows. */
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: 2.5rem;
+  }
+
+  .toc-column {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1rem 1rem 3rem;
+  }
+
+  .content {
+    padding: 1.5rem 1.25rem 2rem;
+  }
+}

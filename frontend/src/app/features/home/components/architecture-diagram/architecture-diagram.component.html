@@ -1,0 +1,55 @@
+<figure class="diagram">
+  <div class="flow">
+    <div class="tier tier--client">
+      <span class="tier-kind">Browser</span>
+      <strong class="tier-name">Angular 21 SPA</strong>
+      <span class="tier-detail"
+        >Pages, components and a signal store. Sends actions, renders the returned state.</span
+      >
+    </div>
+
+    <div class="connector">
+      <span class="connector-label">REST / JSON</span>
+      <span class="arrow" aria-hidden="true"></span>
+    </div>
+
+    <div class="tier">
+      <span class="tier-kind">TicTacToe.Api</span>
+      <strong class="tier-name">ASP.NET Core 8 API</strong>
+      <span class="tier-detail"
+        >Controllers, GameService, ProblemDetails errors, CORS and rate limiting.</span
+      >
+    </div>
+
+    <div class="connector">
+      <span class="connector-label">calls</span>
+      <span class="arrow" aria-hidden="true"></span>
+    </div>
+
+    <div class="tier tier--core">
+      <span class="tier-kind">TicTacToe.Core</span>
+      <strong class="tier-name">Game rules</strong>
+      <span class="tier-detail"
+        >GameEngine, GameSession, ComputerPlayer and Scoreboard. No web dependencies.</span
+      >
+    </div>
+
+    <div class="connector">
+      <span class="connector-label">kept in</span>
+      <span class="arrow" aria-hidden="true"></span>
+    </div>
+
+    <div class="tier">
+      <span class="tier-kind">Storage</span>
+      <strong class="tier-name">In-memory store</strong>
+      <span class="tier-detail"
+        >Game sessions by id plus one shared scoreboard; idle sessions expire.</span
+      >
+    </div>
+  </div>
+
+  <figcaption class="caption">
+    The browser never applies a rule itself: each action goes to the API, which runs it through
+    TicTacToe.Core and answers with the complete game state.
+  </figcaption>
+</figure>
